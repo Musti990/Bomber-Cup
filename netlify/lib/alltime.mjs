@@ -75,7 +75,7 @@ export async function refreshAllTime() {
   const form = new FormData();
   form.append("payload_json", JSON.stringify({
     allowed_mentions: { parse: [] },
-    embeds: [{ color: COLOR, title: "📊 All-Time-Statistik", description: "Alle Cup-Sieger seit Beginn – aktualisiert sich nach jedem Cup.\nEin Team suchen: **/rangliste team:**", footer: { text: `Stand: ${new Date().toLocaleDateString("de-AT", { timeZone: "Europe/Vienna" })}` } }],
+    embeds: [{ color: COLOR, title: "📊 All-Time-Statistik", description: "Alle Cup-Sieger seit Beginn – aktualisiert sich nach jedem Cup.", footer: { text: `Stand: ${new Date().toLocaleDateString("de-AT", { timeZone: "Europe/Vienna" })}` } }],
     attachments: pages.map((_, i) => ({ id: i, filename: `alltime-${i + 1}.png` })),
   }));
   pages.forEach((b, i) => form.append(`files[${i}]`, new Blob([b], { type: "image/png" }), `alltime-${i + 1}.png`));
