@@ -824,6 +824,11 @@ async function component(i, context) {
   }
 
   // --- Regelwerk ---
+  if (id.startsWith("rules_lang:")) {
+    const lang = id.split(":")[1];
+    const { RULES_BY_LANG } = await import("../lib/rules-i18n.mjs");
+    return eph("", V.rulesTranslated(RULES_BY_LANG[lang] || RULES_BY_LANG.en, lang));
+  }
   if (id === "rules_ok") {
     if (await F.rulesAccepted(uid)) return eph("✅ Du hast das Regelwerk bereits akzeptiert.");
     await F.acceptRules(uid);

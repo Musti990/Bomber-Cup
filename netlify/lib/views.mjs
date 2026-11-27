@@ -553,7 +553,23 @@ export function rulesPanel(count, R = RULES) {
       description: "Mit dem Button unten akzeptierst du das Regelwerk.",
       footer: { text: `${count} ${count === 1 ? "Mitglied hat" : "Mitglieder haben"} das Regelwerk akzeptiert · Erst danach ist die Anmeldung zum Cup möglich` },
     }],
-    components: [row(btn("Regeln akzeptieren", "rules_ok", 3, { emoji: { name: "✅" } }), btn("Bearbeiten", "rules_edit", 2, { emoji: { name: "✏️" } }))],
+    components: [
+      row(btn("Regeln akzeptieren", "rules_ok", 3, { emoji: { name: "✅" } }), btn("English", "rules_lang:en", 2, { emoji: { name: "🇬🇧" } }), btn("Türkçe", "rules_lang:tr", 2, { emoji: { name: "🇹🇷" } })),
+      row(btn("Bearbeiten", "rules_edit", 2, { emoji: { name: "✏️" } })),
+    ],
+  };
+}
+
+/** Übersetztes Regelwerk (nur für den, der den Knopf drückt) */
+export function rulesTranslated(R, lang) {
+  const note = lang === "tr" ? "Bu, kuralların çevirisidir – geçerli olan Almanca versiyondur." : "This is a translation – the German version is the official one.";
+  return {
+    embeds: [{
+      color: COLOR,
+      title: R.title,
+      thumbnail: { url: `${site()}/logo.jpg` },
+      fields: R.sections.slice(0, 25).map(([name, value]) => ({ name: String(name).slice(0, 256), value: String(value).slice(0, 1024) })),
+    }, ...(R.highlight?.text ? [{ color: 0xe02424, title: R.highlight.title, description: R.highlight.text }] : []), { color: COLOR, description: `-# ${note}` }],
   };
 }
 

@@ -132,22 +132,7 @@ export const VIDEO_LIMIT = 3; // Größenvideo-Anforderungen pro Mannschaft und 
 export const VIDEO_WINDOW_MIN = 40; // nur bis zur 40. Spielminute (Spieluhr in FC 27)
 
 export const RULES_VERSION = 1; // erhöhen, wenn sich das Regelwerk ändert → alle müssen neu akzeptieren
-export const RULES = {
-  title: "🏆 BOMBER CUP – FC 27 REGELWERK",
-  // Wird als eigener roter Kasten unter dem Regelwerk angezeigt
-  highlight: {
-    title: "📡 ERGEBNISSE KOMMEN DIREKT VON EA 📡",
-    text: "Spielt euer Cup-Spiel als **Freundschaftsspiel Club gegen Club** mit den registrierten EA-Clubs – das Ergebnis wird **automatisch übernommen**.\n\n⚽ **Gruppenphase:** Steht es nach 90 Minuten unentschieden, **verlasst das Spiel nach dem Abpfiff** (sonst geht es in die Verlängerung).\n🏆 **K.-o.-Phase:** Bis zum Ende spielen – bei **Elfmeterschießen** das Ergebnis mit Elfmetern über **Ergebnis melden** eintragen.\n🐞 **Bug / Absturz** in den ersten Minuten? Einfach **neu starten** – abgebrochene Spiele zählen nicht.\n✍️ Funktioniert EA nicht, meldet ihr das Ergebnis wie gewohnt über den Bot.",
-  },
-  sections: [
-    ["⚠️ Pflicht", "**5+1 ist Pflicht** – sonst seid ihr automatisch disqualifiziert."],
-    ["🤝 Respekt & Fair Play", "Die Bomber Cup steht für Fairness und gegenseitigen Respekt.\nJeder Teilnehmer verpflichtet sich zu:\n• Respektvollem Umgang mit allen Spielern\n• Fair Play – auf und neben dem Platz\n• Sachlichen Diskussionen ohne Beleidigungen oder Provokationen\n• Sportlichem Verhalten – egal ob Sieg oder Niederlage"],
-    ["❌ Nicht erlaubt", "• Beleidigungen oder toxisches Verhalten\n• Diskriminierung oder persönliche Angriffe\n• Absichtliches Ausnutzen von Bugs, Glitches oder unfairen Spielmechaniken\n\n**Wichtig:** Verstöße können – je nach Schwere – mit einer Verwarnung, einer Sperre oder dem Ausschluss aus dem Turnier geahndet werden."],
-    ["📏 Größenregeln · Dreierkette (3er-Abwehr)", "• Alle 3 Innenverteidiger (IV): **bis 1,87 m**\n• Alle übrigen Feldspieler: **bis 1,82 m**\n• Torwart: **keine Größenbegrenzung**\n• 📏 Mit **Großer IV** aus dem Shop: 1 IV **bis 1,90 m** (gilt für einen Cup)"],
-    ["📏 Größenregeln · Viererkette (4er-Abwehr)", "• Beide Innenverteidiger (IV): **bis 1,87 m**\n• 1 ZDM: **bis 1,87 m**\n• Alle übrigen Feldspieler: **bis 1,82 m**\n• Torwart: **keine Größenbegrenzung**\n• 📏 Mit **Großer IV** aus dem Shop: 1 IV **bis 1,90 m** (gilt für einen Cup)"],
-    ["🎥 Größenvideos", "• Größenvideos können **nur in den ersten 40 Spielminuten** angefordert werden (Spieluhr im Spiel)\n• Jede Mannschaft darf **maximal 3×** pro Turnier ein Größenvideo anfordern\n• Der Gegner hat bis nach Ende des Spiels Zeit, das Video im Ergebniskanal zu posten"],
-    ["⚖️ Fairness geht vor", "Unser Ziel ist ein wettbewerbsfähiges und faires Turnier, bei dem Können wichtiger ist als das Ausnutzen von Vorteilen.\nMit der Teilnahme am Bomber Cup akzeptiert jeder Spieler dieses Regelwerk und verpflichtet sich, es einzuhalten.\n\n**Bomber Cup – Respekt. Fairness. Wettbewerb.** ⭐"],
-  ],
-};
+// Regelwerk: Deutsch im Kanal, Englisch/Türkisch per Knopf (siehe rules-i18n.mjs)
+export { RULES_DE as RULES } from "./rules-i18n.mjs";
 
 export const FREIGABE_MIN = 5; // maximale Freigabezeit: so viele Minuten nach der Freigabe muss angepfiffen sein
