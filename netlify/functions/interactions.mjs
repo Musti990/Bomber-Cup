@@ -142,8 +142,6 @@ async function uploadLogo(i, context) {
 // ---------- Team anlegen / EA setzen ----------
 async function createTeam(i, uid, name, ea, logo, eaGuess = "") {
   const cfg = await getConfig();
-  // Kein Logo mitgeschickt? Dann das Logo nehmen, das dieser Spieler früher im Logo-Kanal gepostet hat (Import)
-  if (!logo) { const lib = await get(`logolib:${uid}`).catch(() => null); if (lib?.b64) logo = { type: lib.type, b64: lib.b64 }; }
   const v0 = Date.now().toString(36);
   const { result } = await mutate("clubs", (cl) => {
     if (F.clubOfUser(cl, uid)) return "schon";
