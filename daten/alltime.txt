@@ -46,6 +46,8 @@ Vuvuzela – 3
 Wave XI – 3
 Young Lions TC – 3
 Offset – 3
+Erdbeere X – 3
+Fantastic eSport – 3
 11 Pferde – 2
 AS4eGamesCrew – 2
 Bierbauch X – 2
@@ -54,10 +56,8 @@ Cardio X – 2
 Cloud X – 2
 Dream Futbol x – 2
 Equality 05 – 2
-Erdbeere X – 2
 Facility Sports – 2
 Favela CbF – 2
-Fantastic eSport – 2
 FEAR x – 2
 Foxes x – 2
 Ghetto X – 2
@@ -94,6 +94,9 @@ The Panthers 90 – 2
 Thoras Gaming – 2
 Ultras Türkiye – 2
 Winning Road X – 2
+BoyzOnFire – 2
+Insane Gaming – 2
+Last Fellas – 2
 SC Fortuna Köln – 1
 Team Nightclub – 1
 777 – 1
@@ -119,8 +122,6 @@ Blues X – 1
 Bomber TC – 1
 Borussia Esport – 1
 Botti X – 1
-BoytOnFire – 1
-BoyzOnFire – 1
 Bozkurt XI – 1
 BraskoRangersTC – 1
 Brazil – 1
@@ -162,7 +163,6 @@ Egypt NT – 1
 Eleven Reborn – 1
 Elite1squad – 1
 EnV x – 1
-Erdeere x – 1
 ESC Rellinghausen – 1
 Esport Dinamo – 1
 EvilsCF – 1
@@ -182,7 +182,6 @@ FIFA4Fighters – 1
 FifaRendner TC – 1
 Finnskicker – 1
 Firefighters cF – 1
-Fntastic eSport – 1
 France WM – 1
 FreilosX – 1
 Fwk eSports – 1
@@ -213,8 +212,6 @@ iberson x – 1
 Imperial CF – 1
 Interpool Gaming – 1
 InPanic – 1
-Insage Gaming – 1
-Insane Gaming – 1
 Insurance Goal – 1
 Inter Berlin – 1
 Istanbul UTD – 1
@@ -234,8 +231,6 @@ KickersXCF – 1
 Kokosnuss X – 1
 Krater XI – 1
 Köllefornia XI – 1
-Last Fallas – 1
-Last Fellas – 1
 Layla X – 1
 LazyTown – 1
 Ldz City Boys – 1
