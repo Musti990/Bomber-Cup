@@ -189,7 +189,7 @@ export async function chronikPages(cups, { title = "CUP-CHRONIK", sub = "Jeder C
 export async function leaderboardImage({ title, sub, rows, field, unit }) {
   fonts();
   const { teamLogo, drawFit } = await import("./teamlogo.mjs");
-  const W = 1080, H = 1350;
+  const W = 1080, H = 1210;
   const c = createCanvas(W, H), x = c.getContext("2d");
   D.background(x, W, H, W / 2, 420, 820);
   D.shockwaves(x, W / 2, 420, 170, 80, 8);
@@ -211,22 +211,24 @@ export async function leaderboardImage({ title, sub, rows, field, unit }) {
     x.font = "600 30px Montserrat"; x.fillStyle = "rgba(255,255,255,.75)"; x.textAlign = "center";
     x.fillText("Noch keine Daten – nach dem ersten Cup geht's los.", W / 2, 520); x.textAlign = "left";
   }
-  // Podest: 2 – 1 – 3
-  const pod = [{ i: 1, cx: 250, cy: 430, r: 82, col: "#dfe3ea" }, { i: 0, cx: 540, cy: 390, r: 104, col: "#ffcf4a" }, { i: 2, cx: 830, cy: 430, r: 82, col: "#e0894a" }];
-  for (const s of pod) {
-    const p = rows[s.i]; if (!p) continue;
-    await badge(p.club, s.cx, s.cy, s.r, s.col);
-    x.beginPath(); x.arc(s.cx, s.cy - s.r, 24, 0, Math.PI * 2); x.fillStyle = s.col; x.fill();
-    x.font = '30px "Bebas Neue"'; x.fillStyle = "#1a120a"; x.textAlign = "center"; x.fillText(String(s.i + 1), s.cx, s.cy - s.r + 11);
-    x.font = "700 24px Montserrat"; x.fillStyle = "#fff";
-    let nm = p.name; while (x.measureText(nm).width > 250 && nm.length > 3) nm = nm.slice(0, -1);
-    x.fillText(nm === p.name ? nm : nm + "…", s.cx, s.cy + s.r + 38);
-    x.font = "600 16px Montserrat"; x.fillStyle = "rgba(255,255,255,.6)"; x.fillText(p.club, s.cx, s.cy + s.r + 62);
-    x.font = `${s.i === 0 ? 64 : 52}px "Bebas Neue"`; x.fillStyle = s.col; x.fillText(String(p[field]), s.cx, s.cy + s.r + (s.i === 0 ? 124 : 112));
-    x.textAlign = "left";
+  // Platz 1 – 3: Liste wie 4 – 10, etwas größer, Gold/Silber/Bronze, ohne Logo – nur Spieler + Verein
+  const medal = ["#ffcf4a", "#dfe3ea", "#e0894a"];
+  const t0 = 250, th = 112;
+  for (let k = 0; k < Math.min(3, rows.length); k++) {
+    const p = rows[k], Y = t0 + k * th, col = medal[k];
+    x.save(); x.shadowColor = k === 0 ? "rgba(255,207,74,.45)" : "rgba(0,0,0,.4)"; x.shadowBlur = 18;
+    x.fillStyle = "rgba(26,16,9,.94)"; x.beginPath(); x.roundRect(70, Y, W - 140, th - 16, 18); x.fill(); x.restore();
+    x.lineWidth = 3; x.strokeStyle = col; x.beginPath(); x.roundRect(70, Y, W - 140, th - 16, 18); x.stroke();
+    x.beginPath(); x.arc(126, Y + (th - 16) / 2, 30, 0, Math.PI * 2); x.fillStyle = col; x.fill();
+    x.font = '42px "Bebas Neue"'; x.fillStyle = "#1a120a"; x.textAlign = "center"; x.fillText(String(k + 1), 126, Y + (th - 16) / 2 + 15); x.textAlign = "left";
+    x.font = "700 30px Montserrat"; x.fillStyle = "#fff";
+    let nm = p.name; while (x.measureText(nm).width > 520 && nm.length > 3) nm = nm.slice(0, -1);
+    x.fillText(nm === p.name ? nm : nm + "…", 184, Y + 44);
+    x.font = "600 18px Montserrat"; x.fillStyle = "rgba(255,255,255,.6)"; x.fillText(p.club, 184, Y + 74);
+    x.font = '62px "Bebas Neue"'; x.fillStyle = col; x.textAlign = "right"; x.fillText(String(p[field]), W - 100, Y + 70); x.textAlign = "left";
   }
   // Platz 4 – 10
-  const y0 = 720, rh = 74;
+  const y0 = t0 + 3 * th + 14, rh = 74;
   for (let k = 0; k < Math.min(7, Math.max(0, rows.length - 3)); k++) {
     const p = rows[k + 3], Y = y0 + k * rh;
     x.fillStyle = k % 2 ? "rgba(20,14,10,.9)" : "rgba(34,20,10,.9)"; x.beginPath(); x.roundRect(70, Y, W - 140, rh - 12, 14); x.fill();
