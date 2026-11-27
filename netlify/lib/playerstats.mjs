@@ -2,7 +2,7 @@
 // 👟 All-Time-Spielerwerte aus den EA-Daten: Tore, Vorlagen, Zu-null-Spiele (Torhüter).
 // Nach jedem echten Cup (beim TOTT) werden die Werte aller Spieler dazugezählt.
 // Schlüssel = Spielername (wechselt ein Spieler das Team, zählt er weiter – angezeigt wird das letzte Team).
-// Bestenlisten als Bilder im Kanal „alltime“ (eigene Nachricht), werden nach jedem Cup ersetzt.
+// Bestenlisten als Bilder im eigenen Kanal „Statistiken“ (playerstats), werden nach jedem Cup ersetzt.
 // =========================================================
 import { get, mutate, getConfig } from "./store.mjs";
 import { discord, deleteMessage } from "./discord.mjs";
@@ -41,10 +41,10 @@ export async function boards(n = 10) {
   return { scorers: top("goals"), assists: top("assists"), keepers: top("cs", (p) => p.gkGames > 0, "saves"), total: all.length };
 }
 
-/** Bilder bauen und im Kanal „alltime“ die alte Bestenlisten-Nachricht ersetzen */
+/** Bilder bauen und im Kanal „Statistiken“ die alte Bestenlisten-Nachricht ersetzen */
 export async function refreshPlayerBoards() {
   const cfg = await getConfig();
-  const ch = cfg.channels?.alltime;
+  const ch = cfg.channels?.playerstats;
   if (!ch) return false;
   const b = await boards(10);
   if (!b.total) return false;
