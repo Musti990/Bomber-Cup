@@ -1,0 +1,313 @@
+001 Loco Squad
+002 Bloodice CF
+003 PLA Polska
+004 FC Rooted
+005 FC Mecklenburg Schwerin
+006 Loco Banditos
+007 Loco Gaming
+008 Lion Unity Esports
+009 Digital Warriors
+010 Next TC
+011 Pommesbude X
+012 ?
+013 Interpool Gaming
+014 Sultanwald United
+015 VfB Eichstätt eSports
+016 Türkgücü Pro Club
+017 Level Up Pro Club
+018 Rote Teufel E-Sport
+019 SV Fortuna 32 eSports
+020 DJK SVS Ommerborn Sand
+021 SG Nankatsu
+022 FC Buducnost
+023 ?
+024 Wuppertaler SV eSport
+025 Studium et Aplicatio
+026 Wave XI
+027 ?
+028 AFL XI
+029 VFL Turkey
+030 Roter Stern
+031 Rage Gorillaz
+032 Mob Squad
+033 Pizzastars
+034 Madridista FC
+035 Expusion
+036 Ulm Esports
+037 Maledictus FC
+038 Janku Palermo
+039 Greifswalder FC
+040 Prime Dortmund
+041 Silence of Fame
+042 ?
+043 ?
+044 ?
+045 Schwabach SC 04
+046 SO
+047 SC Paderborn 07 eSports
+048 Slavoj
+049 Forteng FC
+050 Rote Teufel E-Sport
+051 BFC Dynamo
+052 FC Sandhausen 1. Mannschaft
+053 Brawl Stars
+054 FC Sandhausen 2. Mannschaft
+055 Pro Vision Esport
+056 Die Königlichen TC
+057 DNA Athletics
+058 SSV Rasentreter
+059 Revenge Power
+060 Schlafenszeit X
+061 ?
+062 FC Streamer Utd
+063 Burazzers
+064 Digital Warriors
+065 Eastside Germany
+066 Mellys
+067 Krakens Red
+068 Creative Boys
+069 Krakens Green
+070 ?
+071 Flex TC
+072 ?
+073 ADS
+074 MVG
+075 MF Killers
+076 Türkgücü Pro Club
+077 Pelle Esports
+078 Franzstadt SC
+079 Iron Falcons CF
+080 SV Fühlingen-Chorweiler
+081 BSV Classic eSport
+082 Shadow Dragons
+083 Türkgücü Pro Club
+084 CVS
+085 ?
+086 Furious Flame FC
+087 Sandstorm United
+088 ?
+089 FFC Jobcenter
+090 Nightfall
+091 FC Sandhausen 1. Mannschaft
+092 Axis TC
+093 Tipico Elite
+094 TwoGen United
+095 ?
+096 FC Viktoria Plzen
+097 Samsunspor
+098 DZTN Elite
+099 FC Rotburg
+100 EA Crashout
+101 SV Unzmarkt
+102 X Amigos CF
+103 Q7 Club
+104 FC Bres
+105 Beros Eleven
+106 Realista CF
+107 Tipico Academy
+108 Fokus XI
+109 Barca Prime XI
+110 XGerman SquadX
+111 YG Skillz
+112 Impact Boys
+113 Kaiser Kollektiv
+114 Gladiators TC
+115 Dynamo Titan
+116 Aureus Esport
+117 Konyaspor
+118 FC Balkan Proclubs
+119 90er Kicker
+120 Vinland eSports
+121 TanzClub Turnier Club 2026
+122 SLK Kafalar
+123 PRG Illyrians
+124 Witkowo
+125 Royal Unity
+126 Danube United
+127 Dynamo eSports
+128 Shadow Spartans FC
+129 Billstedt 579
+130 GER Destroyers
+131 Maledictus FC II
+132 Czaczapuri
+133 Public Enemy
+134 Pingu X
+135 Türkgücü Pro Club
+136 Bros Gaming
+137 Tactic Uni X
+138 Team Kralj X
+139 FC Balkan E-Sports
+140 Prime Eleven FC
+141 ULM Esports
+142 FC Valletta
+143 Astelic Esports
+144 NMC Crew
+145 German Squad T2
+146 Hornets Squad
+147 Sport Clube Trovao
+148 ?
+149 Club Sherrif
+150 FC Sandhausen 1. Mannschaft
+151 HJL Football
+152 FC Koper eSports
+153 Creativeminds United
+154 ADS
+155 Ertü XI
+156 Abus Aynek FC
+157 TanzClub Turnier Club 2026
+158 Nightfall CF
+159 Kalite Spor
+160 Shadow XI
+161 Balkan Mix
+162 ?
+163 Limited Edition
+164 Samsunspor
+165 HCU FC eSports
+166 DJK Grün-Weiss Arnsberg Esports
+167 CWT Blue Dragons
+168 Misie FC
+169 FC Grün Wald
+170 GroundToGlory E-Sports
+171 The Separatists
+172 TSG 1899 Hoffenheim eSports
+173 TSG 1899 Hoffenheim eSports 2
+174 FC Überseequartier Hamburg
+175 SO
+176 TikTok Laz6109
+177 CK Helvetics
+178 Nova Initia
+179 Invincibles FC
+180 FC Mecklenburg Schwerin
+181 Kaizen Eleven
+182 Prime Alemannia
+183 Limited Edition
+184 FC Big Aia
+185 TUSG Ost
+186 Saarland eSports
+187 Team Fokus
+188 Phantom Eleven
+189 Sandstorm United
+190 Outlaws CF
+191 HSV Hajduk
+192 Tactic Uni X
+193 Dark Ritual
+194 Zürich X
+195 ?
+196 Vikings Esport
+197 CalcioVienna FC
+198 SGx R3turn
+199 Karanlik Ordu
+200 Paranoia Kings CF
+201 Beastmode CF
+202 ?
+203 FC Dorstfeld
+204 GSK
+205 Purion
+206 FC Sandhausen
+207 Ascend eSp
+208 FC Käfig Baller
+209 Psycho Bulls
+210 MVG
+211 SV Union Velbert eSports
+212 San Magnolia
+213 Only BigBoys
+214 LKS
+215 Ascend eSp
+216 Abus Aynek FC
+217 Krakens Blue
+218 SGx R3turn
+219 X Inviter
+220 Purion
+221 SGx R3turn
+222 ?
+223 Ascend eSp
+224 LKS
+225 Immortals IMS
+226 Pizzastars
+227 FC Jackson4Life
+228 Matrix eSport
+229 SGx R3turn
+230 Black Ravens FC
+231 Unique CF
+232 877erz United
+233 ?
+234 The Bulls Team
+235 SC Paderborn 07 eSports & Friends
+236 KrisFloow
+237 Orca FC
+238 Shqip
+239 Gladiators TC
+240 FC 08 Kreuztal
+241 LKS 2 Elite
+242 Die Xxalos
+243 Sandstorm United
+244 Wuppertaler SV eSports
+245 Intikam FC
+246 ?
+247 Rostocker PV
+248 SV Blau-Weiß Weitmar 09
+249 FC Germania Zündorf eSports
+250 Ubers
+251 Volcanic
+252 Rostocker PV
+253 Sandstorm United
+254 CF Bande
+255 Creative Minds TC
+256 Vanity
+257 Newcomer X
+258 Reborn Legends
+259 Cunning Foxes
+260 Ascend eSp
+261 Fortynine Esports
+262 Mighty Ducks Esports
+263 Offset TC
+264 Devils XI TC
+265 PLA San Marino
+266 Pancho XI
+267 FC DTR XI
+268 ProLegenda
+269 ?
+270 Stuttgarter Kickers E-Sports
+271 Delete Club
+272 Bloodline E-Sport
+273 Reco Tigers
+274 FC Jackson4Life
+275 Athletic ESC
+276 Mob Squad
+277 Primetime Pro Club
+278 Ultio Vanta
+279 Flens City FC
+280 KFC Uerdingen 05 Esports
+281 CMC DoWaist 2
+282 Berliner FC
+283 Anubis Esport
+284 Os Brabos
+285 Gladiartors TC
+286 Club de Aura
+287 Veyrox CF
+288 Uchiha X
+289 Primetime Pro Club
+290 SWE
+291 Lions United
+292 Türkgücü München E-Sport
+293 Kalite Spor XI
+294 Los Brudalos
+295 Devils XI TC
+296 Unseen XI
+297 Abus Aynek FC
+298 1. FC P
+299 PTM
+300 Kickers United
+301 Balkan Dynasty
+302 Kickers United
+303 NewChapter CF
+304 AWX Esports
+305 Venom
+306 VfB Velaris
+307 MNK Legacy
+308 Reign FC
+309 TheFutureGoats
+310 Void Esport
+311 Noctis Wolves CF
+312 Trabzonspor
+313 Xenith Esports
