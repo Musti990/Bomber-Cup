@@ -850,7 +850,8 @@ async function component(i, context) {
     const clubs = await getClubs();
     const mine = F.clubOfUser(clubs, uid);
     if (!mine) return reply(i, { content: hasRole(i, cfg.roles.manager) ? "Du hast noch keine Mannschaft – registriere dich in Team-registrieren." : "Das können nur Mitglieder mit der Rolle **Manager**.", embeds: [], components: [] });
-    const detail = (c, note) => ({ ...V.teamDetail(c.club, c.data, c.role, daysBetween(SH.lastActiveKey(c.data, todayKey), todayKey())), content: note || "" });
+    const teamStats = ((await get("stats")) || {}).clubs || {};
+    const detail = (c, note) => ({ ...V.teamDetail(c.club, c.data, c.role, daysBetween(SH.lastActiveKey(c.data, todayKey), todayKey()), teamStats[c.club]), content: note || "" });
     if (id === "team_open") return reply(i, detail(mine));
     if (id === "team_ea") return V.eaIdModal("team_ea_m", "EA-Club ändern", mine.data.eaName || mine.data.ea || "");
     if (id === "team_stream") return V.streamModal(mine.data.stream || "");

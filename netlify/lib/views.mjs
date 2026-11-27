@@ -106,7 +106,8 @@ export function teamPanel() {
   };
 }
 
-export function teamDetail(c, data, role, todayDaysRaw) {
+export function teamDetail(c, data, role, todayDaysRaw, st = null) {
+  const s = { w: 0, d: 0, l: 0, gf: 0, ga: 0, ...(st || {}) };
   const protectedNow = todayDaysRaw < 0 || data.protectUntil > Date.now();
   const todayDays = Math.max(0, todayDaysRaw);
   const left = Math.max(0, 7 - todayDays);
@@ -124,6 +125,10 @@ export function teamDetail(c, data, role, todayDaysRaw) {
         { name: "EA-Club", value: data.eaId ? `${esc(data.eaName || data.ea || "–")}\n-# ID ${data.eaId}${data.eaVerified === false ? " · ⚠️ von EA nicht bestätigt" : " · ✅ verknüpft"}` : "–\n-# ⚠️ kein EA-Club verknüpft", inline: true },
         { name: "Cups", value: String(data.cups ?? 0), inline: true },
         { name: "Titel", value: String(data.titles ?? 0), inline: true },
+        { name: "✅ Siege", value: String(s.w), inline: true },
+        { name: "🤝 Unentschieden", value: String(s.d), inline: true },
+        { name: "❌ Niederlagen", value: String(s.l), inline: true },
+        { name: "⚽ Tore", value: `${s.gf}:${s.ga}`, inline: true },
         { name: "📺 Stream", value: streamInfo(data.stream) ? `[${streamInfo(data.stream).name}](${data.stream})` : "–\n-# Noch kein Stream-Link", inline: true },
       ],
     }],
