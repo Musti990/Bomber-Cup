@@ -126,6 +126,8 @@ export function playersOf(eaMatch, sides) {
         mom: String(p.mom) === "1",
         cs: conceded === 0,
         saves: Number(p.saves) || 0,
+        tackles: Number(p.tacklesmade) || 0,
+        passes: Number(p.passesmade) || 0,
       });
     }
   }

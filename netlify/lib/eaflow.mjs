@@ -223,10 +223,10 @@ async function checkTournament(t, left) {
 
 function addPlayer(players, p) {
   const k = `${p.club}|${p.name}`;
-  const x = players[k] ||= { club: p.club, name: p.name, games: 0, rSum: 0, rGames: 0, goals: 0, assists: 0, mom: 0, cs: 0, saves: 0, pos: {} };
+  const x = players[k] ||= { club: p.club, name: p.name, games: 0, rSum: 0, rGames: 0, goals: 0, assists: 0, mom: 0, cs: 0, saves: 0, tackles: 0, passes: 0, pos: {} };
   x.games++;
   if (p.rating != null) { x.rSum += p.rating; x.rGames++; }
-  x.goals += p.goals; x.assists += p.assists; x.mom += p.mom ? 1 : 0; x.cs += p.cs ? 1 : 0; x.saves = (x.saves || 0) + (p.saves || 0);
+  x.goals += p.goals; x.assists += p.assists; x.mom += p.mom ? 1 : 0; x.cs += p.cs ? 1 : 0; x.saves = (x.saves || 0) + (p.saves || 0); x.tackles = (x.tackles || 0) + (p.tackles || 0); x.passes = (x.passes || 0) + (p.passes || 0);
   if (p.pos) x.pos[p.pos] = (x.pos[p.pos] || 0) + 1;
 }
 
@@ -251,6 +251,8 @@ export async function postTott(t, { force = false } = {}) {
     const cupNr = await (await import("./chronik.mjs")).chronik().then((cs) => Math.max(0, ...cs.map((y) => y.nr || 0)) + 1).catch(() => null);
     const img = await tottImage({ title: t.name, team, matches: Object.keys(s.links).length, cupNr });
     await sendWithFile(ch, text, "tott.png", img);
+    // 💣 Bomber-Awards gleich danach (eigenes Bild)
+    try { const AW = await import("./awards.mjs"); const aw = AW.computeAwards(s.players); if (aw) await sendWithFile(ch, { content: `💣 **Bomber Awards · ${t.name}**` }, "bomber-awards.png", await AW.awardsImage(aw, { title: t.name, cupNr })); } catch (e) { console.error("Awards:", e); }
   } catch (e) {
     console.error("TOTT-Bild:", e);
     await sendMessage(ch, { content: text.content + "\n\n" + team.lines.map((l) => `**${l.label}:** ${l.players.map((p) => p ? `${p.name} (${p.club}, ${p.avg.toFixed(1)})` : "–").join(" · ")}`).join("\n") });
