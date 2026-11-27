@@ -6,6 +6,7 @@ import { discord, sendMessage, editMessage, upsertMessage } from "./discord.mjs"
 import { notify } from "./notify.mjs";
 import { enqueue } from "./roles.mjs";
 import { COLOR } from "./data.mjs";
+import { langButtons } from "./i18n.mjs";
 
 const G = () => process.env.DISCORD_GUILD_ID;
 const P = { VIEW: 1n << 10n, SEND: 1n << 11n, EMBED: 1n << 14n, FILES: 1n << 15n, HISTORY: 1n << 16n, MANAGE: 1n << 4n };
@@ -59,7 +60,7 @@ export function ticketPanel() {
       fields: Object.values(TICKET_CATS).filter((c) => !c.internal).map((c) => ({ name: `${c.emoji} ${c.label}`, value: "\u200b", inline: true })),
       footer: { text: "Pro Person ist ein offenes Ticket möglich." },
     }],
-    components: [row(btn("Ticket öffnen", "tk_open", 1, { emoji: { name: "🎫" } }))],
+    components: [row(btn("Ticket öffnen", "tk_open", 1, { emoji: { name: "🎫" } })), langButtons("ticket")],
   };
 }
 
@@ -200,7 +201,7 @@ export function applyPanel(open) {
       fields: Object.values(POSITIONS).map((p) => ({ name: `${p.emoji} ${p.label}`, value: p.text, inline: true })),
       footer: { text: `Neu bewerben geht frühestens nach ${APPLY_COOLDOWN_DAYS} Tagen.` },
     }],
-    components: [row(btn(open ? "Jetzt bewerben" : "Bewerbungen geschlossen", "ap_open", open ? 1 : 2, { emoji: { name: "📝" }, disabled: !open }))],
+    components: [row(btn(open ? "Jetzt bewerben" : "Bewerbungen geschlossen", "ap_open", open ? 1 : 2, { emoji: { name: "📝" }, disabled: !open })), langButtons("apply")],
   };
 }
 
@@ -312,3 +313,6 @@ export async function setApplicationsOpen(open) {
 export function rejectModal(id) {
   return { type: 9, data: { custom_id: `ap_no_m:${id}`, title: `Bewerbung #${id} ablehnen`, components: [row({ type: 4, custom_id: "reason", label: "Begründung (sieht der Bewerber)", style: 2, required: false, max_length: 500 })] } };
 }
+
+/** Sind Bewerbungen gerade offen? (für das übersetzte Panel) */
+export async function applicationsOpen() { return (await applyState()).open !== false; }

@@ -16,6 +16,7 @@ import * as AP from "../lib/adminpanel.mjs";
 import * as SUP from "../lib/support.mjs";
 import * as AU from "../lib/audit.mjs";
 import * as SH from "../lib/shop.mjs";
+import * as L from "../lib/i18n.mjs";
 import { parseVienna, parseTime, toMinutes, nextOccurrence, dateKey, shortDate, todayKey, daysBetween, minutesToHHMM } from "../lib/time.mjs";
 
 // ---------- Hilfen ----------
@@ -36,11 +37,19 @@ function isAdmin(i, cfg) {
 const isStaff = (i, cfg) => isAdmin(i, cfg) || hasRole(i, cfg.roles.moderator);
 const banText = (b) => `ist bis <t:${Math.floor(b.until / 1000)}:F> gesperrt (${["Eingecheckt, aber nicht erschienen","Während laufendem Turnierbetrieb rausgegangen","Gruppen- oder K.-o.-Phase ohne Abmeldung verlassen","Beleidigungen, Respektlosigkeit oder unsportliches Verhalten","Sonstiger schwerer Regelverstoß"][b.reason]})`;
 
+/** Private Antworten (nur für den Klickenden), Formulare und Updates privater Fenster in seine Sprache übersetzen */
+async function personal(i, res) {
+  const lang = await L.getLang(uidOf(i));
+  if (lang === "de" || !res) return res;
+  const priv = res.type === 9 || (res.data && ((res.data.flags ?? 0) & 64)) || (res.type === 7 && isEphemeralMsg(i));
+  return priv ? L.localize(res, lang) : res;
+}
+
 /** Längere Aktionen: Discord sofort antworten, im Hintergrund weiterarbeiten */
 function background(i, context, work, { update = false } = {}) {
   const run = async () => { try { return await work(); } catch (e) { console.error(e); return `❌ ${e.message}`; } };
   if (typeof context?.waitUntil === "function") {
-    context.waitUntil(run().then(async (content) => { if (content) await editOriginal(i, typeof content === "string" ? { content, embeds: [], components: [] } : content); await processQueue(4000); }));
+    context.waitUntil(run().then(async (content) => { if (content) { const lang = await L.getLang(uidOf(i)); await editOriginal(i, L.localize(typeof content === "string" ? { content, embeds: [], components: [] } : content, lang)); } await processQueue(4000); }));
     return update ? { type: 6 } : { type: 5, data: { flags: 64 } };
   }
   return run().then((content) => (update ? { type: 7, data: typeof content === "string" ? { content, embeds: [], components: [] } : content } : eph(typeof content === "string" ? content : "", typeof content === "string" ? {} : content)));
@@ -72,9 +81,8 @@ export default async (req, context) => {
     if (text) { const p = AU.audit(uidOf(i), text, i.channel_id).catch((e) => console.error("Protokoll:", e)); if (context?.waitUntil) context.waitUntil(p); }
   } catch (e) { console.error("Protokoll:", e); }
   try {
-    if (i.type === 2) return json(await command(i, context));
-    if (i.type === 3) return json(await component(i, context));
-    if (i.type === 5) return json(await modal(i, context));
+    const res = i.type === 2 ? await command(i, context) : i.type === 3 ? await component(i, context) : i.type === 5 ? await modal(i, context) : null;
+    if (res) return json(await personal(i, res));
     return json(eph("Unbekannte Aktion."));
   } catch (e) {
     console.error(e);
@@ -824,8 +832,25 @@ async function component(i, context) {
   }
 
   // --- Regelwerk ---
+  if (id.startsWith("lang:")) {
+    const [, panel, lang] = id.split(":");
+    await L.setLang(uid, lang);
+    let p = null;
+    if (panel === "roles") p = V.rolesPanel();
+    else if (panel === "team") p = V.teamPanel();
+    else if (panel === "ticket") p = SUP.ticketPanel();
+    else if (panel === "apply") p = SUP.applyPanel(await SUP.applicationsOpen().catch(() => true));
+    else if (panel === "signup") { const t = await get(tKey(i.channel_id)); if (t) { const clubs = await getClubs(); p = V.signupPanel(t, clubs, await (await import("../lib/premium.mjs")).premiumClubNames(clubs)); } }
+    const note = { de: "🇩🇪 Sprache: **Deutsch** – private Antworten des Bots kommen jetzt auf Deutsch.", en: "🇬🇧 Language: **English** – the bot's private replies are now in English.", tr: "🇹🇷 Dil: **Türkçe** – botun özel yanıtları artık Türkçe." }[lang] || "";
+    if (!p) return eph(note);
+    const isV2 = ((p.flags ?? 0) & (1 << 15)) !== 0;
+    const body = isV2 ? { ...p, flags: (1 << 15) | 64 } : { ...p, content: note, flags: 64 };
+    if (Array.isArray(body.components)) body.components = body.components.map((c) => (c?.type === 17 ? { ...c, components: c.components.filter((x) => !(x.type === 1 && x.components?.some((b) => String(b.custom_id || "").startsWith("lang:")))) } : c)).filter((c) => !(c?.type === 1 && c.components?.some((b) => String(b.custom_id || "").startsWith("lang:"))));
+    return { type: 4, data: L.localize({ allowed_mentions: { parse: [] }, ...body }, lang) };
+  }
   if (id.startsWith("rules_lang:")) {
     const lang = id.split(":")[1];
+    await L.setLang(uid, lang);
     const { RULES_BY_LANG } = await import("../lib/rules-i18n.mjs");
     return eph("", V.rulesTranslated(RULES_BY_LANG[lang] || RULES_BY_LANG.en, lang));
   }
@@ -839,6 +864,7 @@ async function component(i, context) {
   // --- Registrierung ---
   if (id.startsWith("reg_lang:")) {
     const lang = id.split(":")[1];
+    await L.setLang(uid, lang);
     return { type: 4, data: { ...V.regPanel(await getClubs(), lang), flags: (1 << 15) | 64 } }; // nur für den Klickenden
   }
   if (id === "reg_start" || id.startsWith("reg_start:") || id.startsWith("reg_league:") || id.startsWith("reg_club:")) {

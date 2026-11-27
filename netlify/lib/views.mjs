@@ -135,6 +135,7 @@ export function freeAgainPost(c, reason) {
 
 // ---------- Meine Mannschaft ----------
 import { streamTag, streamInfo } from "./stream.mjs";
+import { langButtons } from "./i18n.mjs";
 
 /** Eingabefenster für den Stream-Link */
 export function streamModal(value = "") {
@@ -144,7 +145,7 @@ export function streamModal(value = "") {
 export function teamPanel() {
   return {
     embeds: [{ color: COLOR, title: "🛡️ Meine Mannschaft", description: "Hier verwaltest du deine Mannschaft: Co-VM, EA-Club, verlassen oder löschen.\nDas Fenster kann nur der jeweilige Manager sehen.", footer: FOOTER }],
-    components: [row(btn("Meine Mannschaft öffnen", "team_open", 1, { emoji: { name: "🛡️" } }))],
+    components: [row(btn("Meine Mannschaft öffnen", "team_open", 1, { emoji: { name: "🛡️" } })), langButtons("team")],
   };
 }
 
@@ -291,6 +292,7 @@ export function signupPanel(t, clubs = {}, prio = new Set()) {
       line(),
       txt(teamsText.slice(0, 3000)),
       ...(buttons.length ? [line(false), ...buttons] : []),
+      langButtons("signup"),
       txt("-# Bomber Cup Bot"),
     )],
   };
@@ -692,7 +694,7 @@ export function rolesPanel() {
       ],
       footer: { text: "Wer Manager wird, verliert automatisch die Spieler-Rolle · Nochmal drücken entfernt die Rolle wieder." },
     }],
-    components: [row(btn("Manager werden", "role_manager", 1, { emoji: { name: "👔" } }), btn("Spieler werden", "role_player", 3, { emoji: { name: "⚽" } }))],
+    components: [row(btn("Manager werden", "role_manager", 1, { emoji: { name: "👔" } }), btn("Spieler werden", "role_player", 3, { emoji: { name: "⚽" } })), langButtons("roles")],
   };
 }
 
