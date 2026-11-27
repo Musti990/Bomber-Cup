@@ -837,12 +837,16 @@ async function component(i, context) {
   }
 
   // --- Registrierung ---
-  if (id === "reg_start" || id.startsWith("reg_league:") || id.startsWith("reg_club:")) {
+  if (id.startsWith("reg_lang:")) {
+    const lang = id.split(":")[1];
+    return { type: 4, data: { ...V.regPanel(await getClubs(), lang), flags: (1 << 15) | 64 } }; // nur für den Klickenden
+  }
+  if (id === "reg_start" || id.startsWith("reg_start:") || id.startsWith("reg_league:") || id.startsWith("reg_club:")) {
     if (!hasRole(i, cfg.roles.manager)) return reply(i, { content: "Mannschaften registrieren können nur Mitglieder mit der Rolle **Manager**." });
     const clubs = await getClubs();
     const mine = F.clubOfUser(clubs, uid);
     if (mine) return reply(i, { content: mine.role === "co" ? `Du bist Co-VM von **${V.esc(mine.club)}** und kannst keine eigene Mannschaft registrieren.` : `Du bist bereits Manager von ${flagOf(mine.club)} **${V.esc(mine.club)}**.`, components: [] });
-    return V.regModal(); // eigene Mannschaft: Name + EA-Club
+    return V.regModal(id.startsWith("reg_start:") ? id.split(":")[1] : "de"); // eigene Mannschaft: Name + EA-Club
   }
 
   // --- Meine Mannschaft ---

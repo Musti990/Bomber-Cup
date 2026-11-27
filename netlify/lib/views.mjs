@@ -32,33 +32,75 @@ const pad = (s, n) => (s.length > n ? s.slice(0, n - 1) + "…" : s.padEnd(n));
 export const logoUrl = (team, v = "") => `${site()}/api/logo?t=${encodeURIComponent(team)}${v ? `&v=${v}` : ""}`;
 
 // ---------- Team registrieren ----------
-export function regPanel(clubs) {
+// Texte der Registrier-Kartei: Deutsch (Kanal), Englisch + Türkisch (per Knopf, nur für den Klickenden)
+const REG_TXT = {
+  de: {
+    head: (n) => `## Mannschaft registrieren
+Gründe deine **eigene Mannschaft** – mit eigenem **Namen** und eigenem **Logo**.
+Jeder Name gibt es nur einmal. Du wirst automatisch **Manager**.
+👕 **${n}** ${n === 1 ? "Mannschaft" : "Mannschaften"} registriert`,
+    how: `### So geht's
+1️⃣ Auf **Mannschaft registrieren** klicken
+2️⃣ **Teamname**, **EA-Clubname** und **Logo** eintragen
+3️⃣ Der Bot sucht deinen Club direkt bei EA – gibt es mehrere, wählst du deinen aus`,
+    btn: "Mannschaft registrieren", foot: "Pro Manager eine Mannschaft",
+    m: { title: "Eigene Mannschaft gründen", name: ["Teamname", "So heißt dein Team im Cup", "z. B. Night Wolves FC"], ea: ["EA-Clubname", "Genau so, wie er in EA FC Pro Clubs heißt", "z. B. NightWolvesFC"], logo: ["Team-Logo", "PNG oder JPG, max. 2 MB"] },
+  },
+  en: {
+    head: (n) => `## Register your team
+Create your **own team** – with your own **name** and your own **logo**.
+Every name exists only once. You automatically become the **manager**.
+👕 **${n}** ${n === 1 ? "team" : "teams"} registered`,
+    how: `### How it works
+1️⃣ Click **Register team**
+2️⃣ Enter your **team name**, **EA club name** and **logo**
+3️⃣ The bot looks up your club directly at EA – if there are several, you pick yours`,
+    btn: "Register team", foot: "One team per manager",
+    m: { title: "Create your own team", name: ["Team name", "Your team's name in the cup", "e.g. Night Wolves FC"], ea: ["EA club name", "Exactly as it is called in EA FC Pro Clubs", "e.g. NightWolvesFC"], logo: ["Team logo", "PNG or JPG, max. 2 MB"] },
+  },
+  tr: {
+    head: (n) => `## Takımını kaydet
+Kendi **adın** ve kendi **logon** ile **kendi takımını** kur.
+Her isim sadece bir kez kullanılabilir. Otomatik olarak **menajer** olursun.
+👕 **${n}** takım kayıtlı`,
+    how: `### Nasıl yapılır
+1️⃣ **Takım kaydet**'e tıkla
+2️⃣ **Takım adını**, **EA kulüp adını** ve **logoyu** gir
+3️⃣ Bot kulübünü doğrudan EA'da arar – birden fazla varsa kendi kulübünü seçersin`,
+    btn: "Takım kaydet", foot: "Her menajer için bir takım",
+    m: { title: "Kendi takımını kur", name: ["Takım adı", "Takımının kupadaki adı", "ör. Night Wolves FC"], ea: ["EA kulüp adı", "EA FC Pro Clubs'taki adıyla birebir aynı", "ör. NightWolvesFC"], logo: ["Takım logosu", "PNG veya JPG, en fazla 2 MB"] },
+  },
+};
+
+export function regPanel(clubs, lang = "de") {
   const taken = Object.keys(clubs).length;
+  const T = REG_TXT[lang] || REG_TXT.de;
   return {
     flags: V2,
     components: [box(
       gallery(`${site()}/banner-registrieren.jpg`),
-      txt(`## Mannschaft registrieren\nGründe deine **eigene Mannschaft** – mit eigenem **Namen** und eigenem **Logo**.\nJeder Name gibt es nur einmal. Du wirst automatisch **Manager**.\n👕 **${taken}** ${taken === 1 ? "Mannschaft" : "Mannschaften"} registriert`),
+      txt(T.head(taken)),
       line(),
-      txt("### So geht's\n1️⃣ Auf **Mannschaft registrieren** klicken\n2️⃣ **Teamname**, **EA-Clubname** und **Logo** eintragen\n3️⃣ Der Bot sucht deinen Club direkt bei EA – gibt es mehrere, wählst du deinen aus"),
+      txt(T.how),
       line(),
-      row(btn("Mannschaft registrieren", "reg_start", 1, { emoji: { name: "👕" } })),
-      txt("-# Pro Manager eine Mannschaft"),
+      row(btn(T.btn, lang === "de" ? "reg_start" : `reg_start:${lang}`, 1, { emoji: { name: "👕" } }), ...(lang === "de" ? [btn("English", "reg_lang:en", 2, { emoji: { name: "🇬🇧" } }), btn("Türkçe", "reg_lang:tr", 2, { emoji: { name: "🇹🇷" } })] : [])),
+      txt(`-# ${T.foot}`),
     )],
   };
 }
 
 /** Formular: neue eigene Mannschaft – Name, EA-Clubname und Logo (Datei-Upload direkt im Formular) */
-export function regModal() {
+export function regModal(lang = "de") {
+  const M = (REG_TXT[lang] || REG_TXT.de).m;
   const label = (lbl, desc, component) => ({ type: 18, label: lbl, ...(desc ? { description: desc } : {}), component });
   return {
     type: 9,
     data: {
-      custom_id: "reg_new", title: "Eigene Mannschaft gründen",
+      custom_id: "reg_new", title: M.title,
       components: [
-        label("Teamname", "So heißt dein Team im Cup", { type: 4, custom_id: "name", style: 1, required: true, min_length: 3, max_length: 30, placeholder: "z. B. Night Wolves FC" }),
-        label("EA-Clubname", "Genau so, wie er in EA FC Pro Clubs heißt", { type: 4, custom_id: "ea", style: 1, required: true, min_length: 2, max_length: 40, placeholder: "z. B. NightWolvesFC" }),
-        label("Team-Logo", "PNG oder JPG, max. 2 MB", { type: 19, custom_id: "logo", min_values: 1, max_values: 1, required: true }),
+        label(M.name[0], M.name[1], { type: 4, custom_id: "name", style: 1, required: true, min_length: 3, max_length: 30, placeholder: M.name[2] }),
+        label(M.ea[0], M.ea[1], { type: 4, custom_id: "ea", style: 1, required: true, min_length: 2, max_length: 40, placeholder: M.ea[2] }),
+        label(M.logo[0], M.logo[1], { type: 19, custom_id: "logo", min_values: 1, max_values: 1, required: true }),
       ],
     },
   };
