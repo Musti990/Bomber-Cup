@@ -117,3 +117,67 @@ export async function allTimePages(list, { title = "ALL-TIME STATISTIK", sub = "
   }
   return out;
 }
+
+/**
+ * 📜 Cup-Chronik als Bilder: jeder Cup mit Nummer und Sieger, 4 Spalten, älteste zuerst.
+ * cups: [{ nr, winner, special }] – Sonder-Cups (z. B. Halloween) bekommen ein kleines Schild.
+ */
+export async function chronikPages(cups, { title = "CUP-CHRONIK", sub = "Jeder Cup und sein Sieger" } = {}) {
+  fonts();
+  const total0 = cups.length, cols = 4, maxRows = 34;
+  const nPages0 = Math.max(1, Math.ceil(total0 / (cols * maxRows)));
+  const rows = Math.max(1, Math.ceil(total0 / nPages0 / cols)), per = cols * rows, rowH = 42; // gleichmäßig verteilt
+  const lp = path.join(assetDir(), "logo.png");
+  const logo = fs.existsSync(lp) ? await loadImage(lp).catch(() => null) : null;
+  const total = cups.length, teams = new Set(cups.map((c) => c.winner.trim().toLowerCase())).size;
+  const nPages = nPages0;
+  const out = [];
+  for (let p = 0; p < nPages; p++) {
+    const part = cups.slice(p * per, p * per + per);
+    const H = PAGE_H;
+    const c = createCanvas(W, H), x = c.getContext("2d");
+    D.background(x, W, H, W * 0.82, 120, 900);
+    D.shockwaves(x, W * 0.82, 120, 140, 85, 8);
+    D.sparks(x, 110, W * 0.82, 120, 130, 520, D.rng(60 + p));
+    if (p === 0) {
+      if (logo) D.medallion(x, logo, PAD + 40, 100, 52, D.OR);
+      D.header(x, PAD + 112, 92, 34, "·  " + sub.toUpperCase());
+      D.splitTitle(x, title, PAD + 112, 172, 86);
+      x.font = "600 26px Montserrat"; x.fillStyle = "rgba(255,255,255,.75)";
+      const st = `${total} Cups  ·  ${teams} Sieger-Teams`;
+      x.fillText(st, W - PAD - x.measureText(st).width, 92);
+    } else {
+      if (logo) D.medallion(x, logo, PAD + 26, 82, 34, D.OR);
+      D.header(x, PAD + 76, 74, 30, "·  " + title);
+      D.splitTitle(x, `SEITE ${p + 1}`, PAD + 76, 132, 54);
+    }
+    x.font = "600 22px Montserrat"; x.fillStyle = "rgba(255,255,255,.55)";
+    const pg = `Seite ${p + 1} / ${nPages}`;
+    x.fillText(pg, W - PAD - x.measureText(pg).width, p === 0 ? 132 : 82);
+    const top = p === 0 ? 240 : 170;
+    const cw = (W - PAD * 2) / cols;
+    part.forEach((cup, k) => {
+      const col = Math.floor(k / rows), row = k % rows; // spaltenweise lesen: 1, 2, 3 … nach unten
+      const cx = PAD + col * cw, cy = top + row * rowH;
+      x.fillStyle = row % 2 ? "rgba(255,255,255,.025)" : "rgba(255,138,31,.07)";
+      x.fillRect(cx, cy, cw - 10, rowH - 4);
+      x.font = '28px "Bebas Neue"'; x.fillStyle = D.OR;
+      const nr = cup.nr ? String(cup.nr) : "★";
+      x.fillText(nr, cx + 12, cy + 29);
+      const tagW = cup.special ? 0 : 0;
+      x.font = "600 20px Montserrat"; x.fillStyle = "#ffffff";
+      let room = cw - 86 - (cup.special ? 92 : 0) - tagW, nm = cup.winner;
+      while (x.measureText(nm).width > room && nm.length > 3) nm = nm.slice(0, -1);
+      x.fillText(nm === cup.winner ? nm : nm.trimEnd() + "…", cx + 66, cy + 27);
+      if (cup.special) {
+        const tag = cup.special.replace(/\s*cup$/i, "").toUpperCase();
+        x.font = '20px "Bebas Neue"'; const tw = x.measureText(tag).width + 14;
+        x.fillStyle = "rgba(255,201,74,.18)"; x.beginPath(); x.roundRect(cx + cw - 22 - tw, cy + 8, tw, 24, 6); x.fill();
+        x.fillStyle = D.GOLD; x.fillText(tag, cx + cw - 15 - tw, cy + 27);
+      }
+    });
+    D.hazard(x, W, H, 18);
+    out.push(c.toBuffer("image/png"));
+  }
+  return out;
+}
