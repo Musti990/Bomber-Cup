@@ -66,30 +66,33 @@ async function flagImg(name) {
 }
 
 async function card(x, p, cx, y, short, isPot) {
-  const w = 214, h = 168, X = cx - w / 2;
+  const w = 214, h = 190, X = cx - w / 2;
   x.shadowColor = isPot ? "rgba(242,201,76,.7)" : "rgba(0,0,0,.55)"; x.shadowBlur = isPot ? 26 : 14;
   const g = x.createLinearGradient(0, y, 0, y + h);
   g.addColorStop(0, isPot ? "#3a2f0e" : "#24262f"); g.addColorStop(1, isPot ? "#1b1606" : "#101117");
   x.fillStyle = g; rr(x, X, y, w, h, 16); x.fill(); x.shadowBlur = 0;
-  x.strokeStyle = isPot ? GOLD : "rgba(255,90,31,.85)"; x.lineWidth = isPot ? 3 : 2; rr(x, X, y, w, h, 16); x.stroke();
+  x.strokeStyle = isPot ? GOLD : "rgba(255,138,31,.85)"; x.lineWidth = isPot ? 3 : 2; rr(x, X, y, w, h, 16); x.stroke();
   if (!p) { x.fillStyle = MUTED; x.font = "600 15px Montserrat"; center(x, "keine Daten", cx, y + h / 2 - 8); return; }
-  // Note + Position
-  x.fillStyle = isPot ? GOLD : "#ffffff"; x.font = '54px "Bebas Neue"'; x.fillText(p.avg.toFixed(1), X + 16, y + 10);
-  x.fillStyle = isPot ? GOLD : "#ff9a6b"; x.font = "800 13px Montserrat"; x.fillText(short, X + 18, y + 66);
-  const fl = await flagImg(p.club); if (fl) drawFit(x, fl, X + w - 62, y + 14, 46);
-  if (isPot) star(x, X + w - 39, y + 76, 9, GOLD);
+  // Team-Logo groß und mittig oben auf der Karte
+  const L = 64, fl = await flagImg(p.club);
+  if (fl) { x.save(); x.shadowColor = "rgba(0,0,0,.6)"; x.shadowBlur = 10; drawFit(x, fl, cx - L / 2, y + 10, L); x.restore(); }
+  else { x.strokeStyle = "rgba(255,255,255,.18)"; x.lineWidth = 2; x.beginPath(); x.arc(cx, y + 10 + L / 2, L / 2 - 4, 0, Math.PI * 2); x.stroke(); x.fillStyle = MUTED; x.font = '30px "Bebas Neue"'; const ini = p.club.replace(/[^A-Za-z0-9ÄÖÜäöü ]/g, "").split(/s+/).filter(Boolean).slice(0, 2).map((t) => t[0]).join("").toUpperCase() || "?"; center(x, ini, cx, y + 10 + L / 2 - 16); }
+  // Note links oben, Position darunter
+  x.fillStyle = isPot ? GOLD : "#ffffff"; x.font = '46px "Bebas Neue"'; x.fillText(p.avg.toFixed(1), X + 14, y + 10);
+  x.fillStyle = isPot ? GOLD : "#ff9a6b"; x.font = "800 13px Montserrat"; x.fillText(short, X + 16, y + 58);
+  if (isPot) star(x, X + w - 26, y + 26, 11, GOLD);
   // Name & Verein
-  x.fillStyle = TEXT; fit(x, p.name, "700 {s}px Montserrat", 19, w - 24, 11); center(x, p.name, cx, y + 92);
-  x.fillStyle = MUTED; fit(x, p.club, "600 {s}px Montserrat", 13, w - 24, 9); center(x, p.club, cx, y + 118);
+  x.fillStyle = TEXT; fit(x, p.name, "700 {s}px Montserrat", 19, w - 24, 11); center(x, p.name, cx, y + 84);
+  x.fillStyle = MUTED; fit(x, p.club, "600 {s}px Montserrat", 13, w - 24, 9); center(x, p.club, cx, y + 110);
   // Werte
-  x.fillStyle = "rgba(255,255,255,.07)"; rr(x, X + 10, y + h - 30, w - 20, 22, 11); x.fill();
+  x.fillStyle = "rgba(255,255,255,.07)"; rr(x, X + 10, y + h - 32, w - 20, 22, 11); x.fill();
   x.fillStyle = "#ffd9c7"; x.font = "700 12px Montserrat";
-  center(x, `${p.games} Sp · ${p.goals} T · ${p.assists} V${p.main === "gk" || p.main === "def" ? ` · ${p.cs} ZN` : ""}`, cx, y + h - 26);
+  center(x, `${p.games} Sp · ${p.goals} T · ${p.assists} V${p.main === "gk" || p.main === "def" ? ` · ${p.cs} ZN` : ""}`, cx, y + h - 28);
 }
 
 export async function tottImage({ title, team, matches }) {
   fonts();
-  const W = 1200, H = 1560;
+  const W = 1200, H = 1640;
   const c = createCanvas(W, H), x = c.getContext("2d");
   x.textBaseline = "top";
   let g = x.createLinearGradient(0, 0, 0, H); g.addColorStop(0, "#07080c"); g.addColorStop(0.6, "#121520"); g.addColorStop(1, "#050507"); x.fillStyle = g; x.fillRect(0, 0, W, H);
@@ -105,7 +108,7 @@ export async function tottImage({ title, team, matches }) {
   x.fillStyle = MUTED; x.font = "600 15px Montserrat"; center(x, `3-4-1-2 · Ø-Note aus ${matches} Spielen mit EA-Daten · mind. ${team.minGames} ${team.minGames === 1 ? "Spiel" : "Spiele"}`, W / 2, 178);
 
   // Spielfeld
-  const PX = 60, PY = 214, PW = W - 120, PH = 1080;
+  const PX = 60, PY = 214, PW = W - 120, PH = 1120;
   x.save(); rr(x, PX, PY, PW, PH, 22); x.clip();
   for (let i = 0; i < 10; i++) { x.fillStyle = i % 2 ? "#14532d" : "#166534"; x.fillRect(PX, PY + (PH / 10) * i, PW, PH / 10 + 1); }
   const vg = x.createRadialGradient(W / 2, PY + PH / 2, 100, W / 2, PY + PH / 2, 760); vg.addColorStop(0, "rgba(0,0,0,0)"); vg.addColorStop(1, "rgba(5,5,8,.7)"); x.fillStyle = vg; x.fillRect(PX, PY, PW, PH);
@@ -119,7 +122,7 @@ export async function tottImage({ title, team, matches }) {
   x.strokeStyle = BLUE; x.lineWidth = 3; rr(x, PX, PY, PW, PH, 22); x.stroke();
 
   // Spieler: Sturm oben, Tor unten
-  const rowsY = { fwd: PY + 40, cam: PY + 250, mid: PY + 465, def: PY + 680, gk: PY + 885 };
+  const rowsY = { fwd: PY + 30, cam: PY + 245, mid: PY + 460, def: PY + 680, gk: PY + 905 };
   const xs = { 1: [W / 2], 2: [W / 2 - 170, W / 2 + 170], 3: [W / 2 - 300, W / 2, W / 2 + 300], 4: [W / 2 - 405, W / 2 - 135, W / 2 + 135, W / 2 + 405] };
   const isPot = (p) => p && team.pot && p.name === team.pot.name && p.club === team.pot.club;
   for (const l of team.lines) {
@@ -129,20 +132,21 @@ export async function tottImage({ title, team, matches }) {
   }
 
   // Spieler des Turniers
-  const by = PY + PH + 30, bh = 170;
+  const by = PY + PH + 26, bh = 230;
   x.fillStyle = "rgba(242,201,76,.08)"; rr(x, PX, by, PW, bh, 18); x.fill();
   x.strokeStyle = GOLD; x.lineWidth = 2; rr(x, PX, by, PW, bh, 18); x.stroke();
   const p = team.pot;
   x.fillStyle = GOLD; x.font = "800 15px Montserrat"; const lw = spaced(x, "SPIELER DES TURNIERS", W / 2, by + 20, 5);
   star(x, W / 2 - lw / 2 - 20, by + 29, 8, GOLD); star(x, W / 2 + lw / 2 + 20, by + 29, 8, GOLD);
   if (p) {
+    // Team-Logo mittig über dem Namen
     const fl = await flagImg(p.club);
-    x.fillStyle = "#ffffff"; fit(x, p.name.toUpperCase(), '{s}px "Bebas Neue"', 64, PW - 260, 28);
-    const nw = x.measureText(p.name.toUpperCase()).width, fx = W / 2 - (nw + (fl ? 70 : 0)) / 2;
-    if (fl) drawFit(x, fl, fx, by + 52, 54);
-    x.fillText(p.name.toUpperCase(), fx + (fl ? 70 : 0), by + 46);
+    if (fl) { x.save(); x.shadowColor = "rgba(242,201,76,.45)"; x.shadowBlur = 16; drawFit(x, fl, W / 2 - 34, by + 46, 68); x.restore(); }
+    const ny = fl ? by + 118 : by + 52;
+    x.fillStyle = "#ffffff"; fit(x, p.name.toUpperCase(), '{s}px "Bebas Neue"', 60, PW - 160, 28);
+    center(x, p.name.toUpperCase(), W / 2, ny);
     x.fillStyle = MUTED; x.font = "600 18px Montserrat";
-    center(x, `${p.club}  ·  Ø ${p.avg.toFixed(1)}  ·  ${p.games} Spiele  ·  ${p.goals} Tore  ·  ${p.assists} Vorlagen${p.mom ? `  ·  ${p.mom}× MOTM` : ""}`, W / 2, by + 124);
+    center(x, `${p.club}  ·  Ø ${p.avg.toFixed(1)}  ·  ${p.games} Spiele  ·  ${p.goals} Tore  ·  ${p.assists} Vorlagen${p.mom ? `  ·  ${p.mom}× MOTM` : ""}`, W / 2, ny + 66);
   }
   x.fillStyle = "#7d7f8c"; x.font = "600 13px Montserrat"; center(x, "Bomber Cup · Daten: EA SPORTS FC Pro Clubs · T = Tore · V = Vorlagen · ZN = Zu-null-Spiele", W / 2, H - 34);
   x.strokeStyle = BLUE; x.lineWidth = 2; x.strokeRect(10, 10, W - 20, H - 20);
