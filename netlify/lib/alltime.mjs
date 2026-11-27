@@ -54,17 +54,6 @@ export async function addWin(team) {
   });
 }
 
-/** Ein Team suchen → { name, wins, place, of } oder Vorschläge */
-export async function findTeam(q) {
-  const { rank } = await import("./alltimegfx.mjs");
-  const R = rank(await allTimeList());
-  const k = key(q);
-  const hit = R.find((t) => key(t.name) === k);
-  if (hit) return { hit, of: R.length };
-  const like = R.filter((t) => key(t.name).includes(k)).slice(0, 10);
-  return { like, of: R.length };
-}
-
 /** Bilder neu bauen und die alte Nachricht ersetzen (nur wenn Kanal „alltime“ verknüpft ist) */
 export async function refreshAllTime() {
   const cfg = await getConfig();

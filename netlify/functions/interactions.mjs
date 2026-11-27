@@ -340,20 +340,6 @@ async function adminPanelModal(i, context, cfg, v) {
 
 // ---------- Slash-Befehle ----------
 // ---------- Bomber Cup: Profil, Premium, Moderation ----------
-async function rankingCmd(i) {
-  const AT = await import("../lib/alltime.mjs");
-  const q = opts(i.data.options).team;
-  if (!q) {
-    const { rank } = await import("../lib/alltimegfx.mjs");
-    const R = rank(await AT.allTimeList());
-    return eph("", { embeds: [{ color: COLOR, title: "📊 All-Time · Top 10", description: R.slice(0, 10).map((t) => `**${t.place}.** ${V.esc(t.name)} – ${t.wins} ${t.wins === 1 ? "Sieg" : "Siege"}`).join("\n") + `\n\n-# ${R.length} Sieger-Teams insgesamt · Team suchen: /rangliste team:` }] });
-  }
-  const r = await AT.findTeam(q);
-  if (r.hit) return eph("", { embeds: [{ color: COLOR, title: `📊 ${r.hit.name}`, description: `**Platz ${r.hit.place}** von ${r.of} Sieger-Teams\n🏆 **${r.hit.wins}** ${r.hit.wins === 1 ? "Cup-Sieg" : "Cup-Siege"}` }] });
-  if (r.like?.length) return eph(`Kein genauer Treffer. Meintest du:\n${r.like.map((t) => `• **${V.esc(t.name)}** (Platz ${t.place}, ${t.wins})`).join("\n")}`);
-  return eph(`**${V.esc(q)}** hat noch keinen Bomber-Cup gewonnen.`);
-}
-
 async function profileCmd(i) {
   const uid = opts(i.data.options).spieler || uidOf(i);
   const BD = await import("../lib/badges.mjs");
@@ -427,7 +413,6 @@ async function command(i, context) {
   if (name === "cup-ergebnis") return resultOpen(i);
   if (name === "cup-logo") return uploadLogo(i, context);
   if (name === "profil") return profileCmd(i);
-  if (name === "rangliste") return rankingCmd(i);
   if (name === "premium") return premiumCmd(i, context, cfg);
   if (name === "mod") return modCmd(i, context, cfg);
   if (name === "cup-bewerbung") {
