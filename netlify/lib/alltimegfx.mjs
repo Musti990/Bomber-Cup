@@ -95,11 +95,9 @@ export async function allTimePages(list, { title = "ALL-TIME STATISTIK", sub = "
       let y = top + b.y;
       x.fillStyle = "rgba(255,138,31,.10)"; x.beginPath(); x.roundRect(PAD, y, W - PAD * 2, 56, 14); x.fill();
       x.fillStyle = D.OR; x.fillRect(PAD, y, 8, 56);
-      x.beginPath(); x.arc(PAD + 52, y + 28, 22, 0, Math.PI * 2); x.fillStyle = tier.place === 1 ? "#ffcf4a" : tier.place <= 3 ? "#e0894a" : "rgba(255,138,31,.85)"; x.fill();
-      x.font = '30px "Bebas Neue"'; x.fillStyle = "#1a120a"; const pl = String(tier.place); x.fillText(pl, PAD + 52 - x.measureText(pl).width / 2, y + 39);
-      x.font = '46px "Bebas Neue"'; x.fillStyle = D.GOLD; const wn = String(tier.wins); x.fillText(wn, PAD + 92, y + 45);
+      x.font = '46px "Bebas Neue"'; x.fillStyle = D.GOLD; const wn = String(tier.wins); x.fillText(wn, PAD + 30, y + 45);
       const ww = x.measureText(wn).width;
-      x.font = '34px "Bebas Neue"'; x.fillStyle = "#ffffff"; x.fillText(tier.wins === 1 ? "SIEG" : "SIEGE", PAD + 102 + ww, y + 43);
+      x.font = '34px "Bebas Neue"'; x.fillStyle = "#ffffff"; x.fillText(tier.wins === 1 ? "SIEG" : "SIEGE", PAD + 40 + ww, y + 43);
       x.font = "600 22px Montserrat"; x.fillStyle = "rgba(255,255,255,.6)";
       const cnt = `${tier.teams.length} ${tier.teams.length === 1 ? "Team" : "Teams"}${b.cont ? " · Fortsetzung" : ""}`;
       x.fillText(cnt, W - PAD - 20 - x.measureText(cnt).width, y + 37);
