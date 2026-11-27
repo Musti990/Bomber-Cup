@@ -90,65 +90,106 @@ async function card(x, p, cx, y, short, isPot) {
   center(x, `${p.games} Sp · ${p.goals} T · ${p.assists} V${p.main === "gk" || p.main === "def" ? ` · ${p.cs} ZN` : ""}`, cx, y + h - 28);
 }
 
-export async function tottImage({ title, team, matches }) {
+/**
+ * TOTT im Bomber-Cup-Stil „Detonation“ (Hochformat 1080 × 1620):
+ * Druckwellen + Feuer-Glut, Spielfeld in Perspektive, jeder Spieler als Team-Logo im Neon-Ring,
+ * darunter Name + Note. Keine Statistiken. Bester Spieler: goldener Ring mit Stern.
+ * cupNr: optional „CUP #699“ oben rechts.
+ */
+export async function tottImage({ title, team, matches, cupNr = null }) {
   fonts();
-  const W = 1200, H = 1640;
+  const D = await import("./detonation.mjs");
+  const W = 1080, H = 1620;
   const c = createCanvas(W, H), x = c.getContext("2d");
-  x.textBaseline = "top";
-  let g = x.createLinearGradient(0, 0, 0, H); g.addColorStop(0, "#07080c"); g.addColorStop(0.6, "#121520"); g.addColorStop(1, "#050507"); x.fillStyle = g; x.fillRect(0, 0, W, H);
+  x.textBaseline = "alphabetic";
+  D.background(x, W, H, W / 2, 980, 1050);
+  D.shockwaves(x, W / 2, 980, 260, 95, 9);
+  D.sparks(x, 260, W / 2, 980, 240, 900, D.rng(77));
+  const glowTop = x.createRadialGradient(W / 2, 120, 0, W / 2, 120, 520);
+  glowTop.addColorStop(0, "rgba(255,90,20,.28)"); glowTop.addColorStop(1, "rgba(0,0,0,0)");
+  x.fillStyle = glowTop; x.fillRect(0, 0, W, 600);
 
-  // Kopf
-  // Bomber-Cup-Logo oben links
-  try { const lg = await loadImage(path.join(assetDir(), "logo.png")); x.shadowColor = BLUE; x.shadowBlur = 18; x.drawImage(lg, 40, 30, 170, 170 * lg.height / lg.width); x.shadowBlur = 0; } catch {}
-  x.fillStyle = "#ffb08a"; x.font = "800 18px Montserrat"; const tw = spaced(x, "TEAM OF THE TOURNAMENT", W / 2, 34, 6);
-  star(x, W / 2 - tw / 2 - 24, 45, 9, GOLD); star(x, W / 2 + tw / 2 + 24, 45, 9, GOLD);
-  x.font = '80px "Bebas Neue"'; const tg = x.createLinearGradient(0, 64, 0, 140); tg.addColorStop(0, "#fce284"); tg.addColorStop(1, "#c08a1a");
-  x.fillStyle = tg; x.shadowColor = "rgba(0,0,0,.7)"; x.shadowBlur = 12; center(x, "TOTT", W / 2, 64); x.shadowBlur = 0;
-  x.fillStyle = TEXT; fit(x, title, "600 {s}px Montserrat", 20, W - 100); center(x, title, W / 2, 148);
-  x.fillStyle = MUTED; x.font = "600 15px Montserrat"; center(x, `3-4-1-2 · Ø-Note aus ${matches} Spielen mit EA-Daten · mind. ${team.minGames} ${team.minGames === 1 ? "Spiel" : "Spiele"}`, W / 2, 178);
+  // Kopf: Logo links, Titel, Cup-Nummer rechts
+  try { const lg = await loadImage(path.join(assetDir(), "logo.png")); D.medallion(x, lg, 128, 150, 88); } catch {}
+  x.textAlign = "left";
+  x.font = '30px "Bebas Neue"'; x.fillStyle = D.OR; x.fillText("BOMBER CUP", 248, 88);
+  x.fillStyle = "rgba(255,255,255,.55)"; x.fillText("·  EA FC PRO CLUBS", 248 + x.measureText("BOMBER CUP ").width + 10, 88);
+  D.splitTitle(x, "TEAM OF THE", 246, 168, 92);
+  D.splitTitle(x, "TOURNAMENT", 246, 262, 112);
+  if (cupNr) {
+    const tag = `CUP #${cupNr}`;
+    x.font = '44px "Bebas Neue"';
+    const tw = x.measureText(tag).width + 40;
+    x.fillStyle = "rgba(0,0,0,.55)"; rr(x, W - 60 - tw, 300, tw, 60, 14); x.fill();
+    x.save(); x.shadowColor = "rgba(255,138,31,.8)"; x.shadowBlur = 18; x.strokeStyle = D.OR; x.lineWidth = 4; rr(x, W - 60 - tw, 300, tw, 60, 14); x.stroke(); x.restore();
+    x.fillStyle = "#fff"; x.fillText(tag, W - 60 - tw + 20, 345);
+  }
+  x.font = "600 22px Montserrat"; x.fillStyle = "rgba(255,255,255,.8)"; x.fillText(title, 250, 330);
 
-  // Spielfeld
-  const PX = 60, PY = 214, PW = W - 120, PH = 1120;
-  x.save(); rr(x, PX, PY, PW, PH, 22); x.clip();
-  for (let i = 0; i < 10; i++) { x.fillStyle = i % 2 ? "#14532d" : "#166534"; x.fillRect(PX, PY + (PH / 10) * i, PW, PH / 10 + 1); }
-  const vg = x.createRadialGradient(W / 2, PY + PH / 2, 100, W / 2, PY + PH / 2, 760); vg.addColorStop(0, "rgba(0,0,0,0)"); vg.addColorStop(1, "rgba(5,5,8,.7)"); x.fillStyle = vg; x.fillRect(PX, PY, PW, PH);
-  x.strokeStyle = "rgba(255,255,255,.35)"; x.lineWidth = 3;
-  x.strokeRect(PX + 30, PY + 30, PW - 60, PH - 60);
-  x.beginPath(); x.moveTo(PX + 30, PY + PH / 2); x.lineTo(PX + PW - 30, PY + PH / 2); x.stroke();
-  x.beginPath(); x.arc(W / 2, PY + PH / 2, 95, 0, Math.PI * 2); x.stroke();
-  x.strokeRect(W / 2 - 200, PY + 30, 400, 150); x.strokeRect(W / 2 - 200, PY + PH - 180, 400, 150);
-  x.strokeRect(W / 2 - 90, PY + 30, 180, 60); x.strokeRect(W / 2 - 90, PY + PH - 90, 180, 60);
+  // Spielfeld in Perspektive (oben schmal, unten breit)
+  const top = 390, bot = 1500, tl = 250, tr = W - 250, bl = 40, br = W - 40;
+  const at = (fx, fy) => { const y = top + (bot - top) * fy; const L = tl + (bl - tl) * fy, R = tr + (br - tr) * fy; return [L + (R - L) * fx, y]; };
+  const field = x.createLinearGradient(0, top, 0, bot); field.addColorStop(0, "rgba(30,14,6,.55)"); field.addColorStop(1, "rgba(60,22,6,.55)");
+  x.beginPath(); x.moveTo(tl, top); x.lineTo(tr, top); x.lineTo(br, bot); x.lineTo(bl, bot); x.closePath(); x.fillStyle = field; x.fill();
+  x.save(); x.clip(); x.strokeStyle = "rgba(255,255,255,.04)"; x.lineWidth = 1;
+  for (let i = 0; i < 26; i++) { const [a1, b1] = at(i / 25, 0), [a2, b2] = at(i / 25, 1); x.beginPath(); x.moveTo(a1, b1); x.lineTo(a2, b2); x.stroke(); }
   x.restore();
-  x.strokeStyle = BLUE; x.lineWidth = 3; rr(x, PX, PY, PW, PH, 22); x.stroke();
+  const line = (pts) => { x.save(); x.shadowColor = "rgba(255,138,31,.9)"; x.shadowBlur = 14; x.strokeStyle = "rgba(255,170,90,.85)"; x.lineWidth = 3; x.beginPath(); pts.forEach(([fx, fy], i) => { const [px, py] = at(fx, fy); if (i) x.lineTo(px, py); else x.moveTo(px, py); }); x.stroke(); x.restore(); };
+  line([[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]);
+  line([[0, 0.5], [1, 0.5]]);
+  line([[0.3, 0], [0.3, 0.13], [0.7, 0.13], [0.7, 0]]); line([[0.3, 1], [0.3, 0.87], [0.7, 0.87], [0.7, 1]]);
+  line([[0.42, 0], [0.42, 0.05], [0.58, 0.05], [0.58, 0]]); line([[0.42, 1], [0.42, 0.95], [0.58, 0.95], [0.58, 1]]);
+  { const [cx0, cy0] = at(0.5, 0.5); x.save(); x.shadowColor = "rgba(255,138,31,.9)"; x.shadowBlur = 14; x.strokeStyle = "rgba(255,170,90,.85)"; x.lineWidth = 3; x.beginPath(); x.ellipse(cx0, cy0, 120, 62, 0, 0, Math.PI * 2); x.stroke(); x.restore(); }
 
-  // Spieler: Sturm oben, Tor unten
-  const rowsY = { fwd: PY + 30, cam: PY + 245, mid: PY + 460, def: PY + 680, gk: PY + 905 };
-  const xs = { 1: [W / 2], 2: [W / 2 - 170, W / 2 + 170], 3: [W / 2 - 300, W / 2, W / 2 + 300], 4: [W / 2 - 405, W / 2 - 135, W / 2 + 135, W / 2 + 405] };
+  // Spieler (3-4-1-2): Reihen von oben nach unten
+  const rows = { fwd: { fy: 0.07, xs: [0.32, 0.68] }, cam: { fy: 0.27, xs: [0.5] }, mid: { fy: 0.43, xs: [0.06, 0.35, 0.65, 0.94] }, def: { fy: 0.66, xs: [0.2, 0.5, 0.8] }, gk: { fy: 0.86, xs: [0.5] } };
   const isPot = (p) => p && team.pot && p.name === team.pot.name && p.club === team.pot.club;
   for (const l of team.lines) {
-    const pos = xs[l.n];
-    const yOff = (i) => (l.key === "mid" && (i === 1 || i === 2) ? 25 : l.key === "def" && i === 1 ? 15 : 0); // leichte Bögen wie bei echten Aufstellungen
-    for (let i = 0; i < l.n; i++) await card(x, l.players[i], pos[i], rowsY[l.key] + yOff(i), l.short, isPot(l.players[i]));
+    const r = rows[l.key];
+    if (!r) continue;
+    for (let i = 0; i < l.n; i++) {
+      const p = l.players[i];
+      if (!p) continue;
+      let [px, py] = at(r.xs[i], r.fy);
+      px = Math.max(115, Math.min(W - 145, px));
+      const yo = l.key === "mid" && (i === 1 || i === 2) ? 26 : l.key === "def" && i === 1 ? 18 : 0;
+      await playerBadge(x, D, p, px, py + yo, isPot(p));
+    }
   }
-
-  // Spieler des Turniers
-  const by = PY + PH + 26, bh = 230;
-  x.fillStyle = "rgba(242,201,76,.08)"; rr(x, PX, by, PW, bh, 18); x.fill();
-  x.strokeStyle = GOLD; x.lineWidth = 2; rr(x, PX, by, PW, bh, 18); x.stroke();
-  const p = team.pot;
-  x.fillStyle = GOLD; x.font = "800 15px Montserrat"; const lw = spaced(x, "SPIELER DES TURNIERS", W / 2, by + 20, 5);
-  star(x, W / 2 - lw / 2 - 20, by + 29, 8, GOLD); star(x, W / 2 + lw / 2 + 20, by + 29, 8, GOLD);
-  if (p) {
-    // Team-Logo mittig über dem Namen
-    const fl = await flagImg(p.club);
-    if (fl) { x.save(); x.shadowColor = "rgba(242,201,76,.45)"; x.shadowBlur = 16; drawFit(x, fl, W / 2 - 34, by + 46, 68); x.restore(); }
-    const ny = fl ? by + 118 : by + 52;
-    x.fillStyle = "#ffffff"; fit(x, p.name.toUpperCase(), '{s}px "Bebas Neue"', 60, PW - 160, 28);
-    center(x, p.name.toUpperCase(), W / 2, ny);
-    x.fillStyle = MUTED; x.font = "600 18px Montserrat";
-    center(x, `${p.club}  ·  Ø ${p.avg.toFixed(1)}  ·  ${p.games} Spiele  ·  ${p.goals} Tore  ·  ${p.assists} Vorlagen${p.mom ? `  ·  ${p.mom}× MOTM` : ""}`, W / 2, ny + 66);
-  }
-  x.fillStyle = "#7d7f8c"; x.font = "600 13px Montserrat"; center(x, "Bomber Cup · Daten: EA SPORTS FC Pro Clubs · T = Tore · V = Vorlagen · ZN = Zu-null-Spiele", W / 2, H - 34);
-  x.strokeStyle = BLUE; x.lineWidth = 2; x.strokeRect(10, 10, W - 20, H - 20);
+  x.font = "600 15px Montserrat"; x.fillStyle = "rgba(255,255,255,.5)"; x.textAlign = "center";
+  x.fillText(`3-4-1-2 · Ø-Note aus ${matches} Spielen (EA-Daten)`, W / 2, H - 46);
+  x.textAlign = "left";
+  D.hazard(x, W, H, 20);
   return c.toBuffer("image/png");
+}
+
+/** Ein Spieler: Team-Logo im Neon-Ring, darunter Namens-Leiste mit Note */
+async function playerBadge(x, D, p, cx, cy, pot) {
+  const R = 74, ring = pot ? "#ffcf4a" : D.OR;
+  x.save(); x.shadowColor = pot ? "rgba(255,207,74,.95)" : "rgba(255,120,30,.9)"; x.shadowBlur = 26;
+  x.beginPath(); x.arc(cx, cy, R, 0, Math.PI * 2); x.fillStyle = "#0d0907"; x.fill(); x.restore();
+  const logo = await flagImg(p.club);
+  if (logo) { x.save(); x.beginPath(); x.arc(cx, cy, R - 6, 0, Math.PI * 2); x.clip(); drawFit(x, logo, cx - (R - 10), cy - (R - 10), (R - 10) * 2); x.restore(); }
+  else {
+    x.font = '48px "Bebas Neue"'; x.fillStyle = "rgba(255,201,74,.8)"; x.textAlign = "center";
+    const ini = p.club.replace(/[^A-Za-z0-9ÄÖÜäöü ]/g, "").split(/\s+/).filter(Boolean).slice(0, 2).map((t) => t[0]).join("").toUpperCase() || "?";
+    x.fillText(ini, cx, cy + 17); x.textAlign = "left";
+  }
+  x.lineWidth = 5; x.strokeStyle = ring; x.beginPath(); x.arc(cx, cy, R, 0, Math.PI * 2); x.stroke();
+  x.lineWidth = 1.5; x.strokeStyle = "rgba(255,255,255,.35)"; x.beginPath(); x.arc(cx, cy, R + 7, Math.PI * 1.1, Math.PI * 1.9); x.stroke();
+  if (pot) star(x, cx + R * 0.72, cy - R * 0.72, 16, "#ffcf4a");
+  // Namens-Leiste + Note
+  x.font = "700 21px Montserrat";
+  let name = p.name;
+  while (x.measureText(name).width > 170 && name.length > 3) name = name.slice(0, -1);
+  if (name !== p.name) name = name.trimEnd() + "…";
+  const nw = Math.max(110, x.measureText(name).width + 34), bh = 42, by = cy + R - 8, bx = cx - (nw + 34) / 2;
+  x.save(); x.shadowColor = "rgba(0,0,0,.7)"; x.shadowBlur = 10; x.fillStyle = "rgba(12,8,6,.92)"; rr(x, bx, by, nw, bh, bh / 2); x.fill(); x.restore();
+  x.lineWidth = 2.5; x.strokeStyle = ring; rr(x, bx, by, nw, bh, bh / 2); x.stroke();
+  x.fillStyle = "#fff"; x.textAlign = "center"; x.fillText(name, bx + nw / 2 - 4, by + 29);
+  const rcx = bx + nw + 12, rcy = by + bh / 2, rr0 = 27;
+  x.save(); x.shadowColor = pot ? "rgba(255,207,74,.9)" : "rgba(255,120,30,.9)"; x.shadowBlur = 14;
+  x.beginPath(); x.arc(rcx, rcy, rr0, 0, Math.PI * 2); x.fillStyle = pot ? "#ffcf4a" : D.OR; x.fill(); x.restore();
+  x.font = '30px "Bebas Neue"'; x.fillStyle = "#140c06"; x.fillText(p.avg.toFixed(1).replace(".", ","), rcx, rcy + 11);
+  x.textAlign = "left";
 }

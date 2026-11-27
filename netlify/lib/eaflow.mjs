@@ -246,7 +246,8 @@ export async function postTott(t, { force = false } = {}) {
   const potT = team.pot;
   const text = { content: `⭐ **TOTT · ${t.name}**\n🏅 Spieler des Turniers: **${potT.name}** · ${flagOf(potT.club)} ${potT.club} · Ø ${potT.avg.toFixed(1)} · ${potT.goals} T · ${potT.assists} V\n-# Aus ${Object.keys(s.links).length} Spielen mit EA-Daten · 4-3-3` };
   try {
-    const img = await tottImage({ title: t.name, team, matches: Object.keys(s.links).length });
+    const cupNr = await (await import("./chronik.mjs")).chronik().then((cs) => Math.max(0, ...cs.map((y) => y.nr || 0)) + 1).catch(() => null);
+    const img = await tottImage({ title: t.name, team, matches: Object.keys(s.links).length, cupNr });
     await sendWithFile(ch, text, "tott.png", img);
   } catch (e) {
     console.error("TOTT-Bild:", e);
