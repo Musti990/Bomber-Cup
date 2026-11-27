@@ -223,10 +223,10 @@ async function checkTournament(t, left) {
 
 function addPlayer(players, p) {
   const k = `${p.club}|${p.name}`;
-  const x = players[k] ||= { club: p.club, name: p.name, games: 0, rSum: 0, rGames: 0, goals: 0, assists: 0, mom: 0, cs: 0, pos: {} };
+  const x = players[k] ||= { club: p.club, name: p.name, games: 0, rSum: 0, rGames: 0, goals: 0, assists: 0, mom: 0, cs: 0, saves: 0, pos: {} };
   x.games++;
   if (p.rating != null) { x.rSum += p.rating; x.rGames++; }
-  x.goals += p.goals; x.assists += p.assists; x.mom += p.mom ? 1 : 0; x.cs += p.cs ? 1 : 0;
+  x.goals += p.goals; x.assists += p.assists; x.mom += p.mom ? 1 : 0; x.cs += p.cs ? 1 : 0; x.saves = (x.saves || 0) + (p.saves || 0);
   if (p.pos) x.pos[p.pos] = (x.pos[p.pos] || 0) + 1;
 }
 

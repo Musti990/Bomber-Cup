@@ -108,7 +108,7 @@ export function findMatchBetween(list, idA, idB, sinceMs, used = [], { all = fal
 // ---------- Spielerdaten für das TOTT ----------
 /**
  * Spieler beider Mannschaften aus einem EA-Spiel, zugeordnet zu unseren Turnier-Vereinen.
- * Rückgabe: [{ club, name, pos, goals, assists, rating, mom, cs }]  (cs = zu null gespielt)
+ * Rückgabe: [{ club, name, pos, goals, assists, rating, mom, cs, saves }]  (cs = zu null gespielt, saves = Paraden)
  */
 export function playersOf(eaMatch, sides) {
   const out = [];
@@ -125,6 +125,7 @@ export function playersOf(eaMatch, sides) {
         rating: Number.isFinite(rating) ? rating : null,
         mom: String(p.mom) === "1",
         cs: conceded === 0,
+        saves: Number(p.saves) || 0,
       });
     }
   }

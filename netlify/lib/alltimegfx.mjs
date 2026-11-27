@@ -186,7 +186,7 @@ export async function chronikPages(cups, { title = "CUP-CHRONIK", sub = "Jeder C
  * 👟 Bestenliste (Top 10) eines Wertes: Torschützen, Vorlagen oder Torhüter.
  * rows: [{ name, club, [field] }] – Platz 1–3 groß mit Logo, 4–10 als Liste. Hochformat 1080 × 1350.
  */
-export async function leaderboardImage({ title, sub, rows, field, unit }) {
+export async function leaderboardImage({ title, sub, rows, field, unit, extra = null }) {
   fonts();
   const { teamLogo, drawFit } = await import("./teamlogo.mjs");
   const W = 1080, H = 1160;
@@ -212,7 +212,8 @@ export async function leaderboardImage({ title, sub, rows, field, unit }) {
     x.fillText("Noch keine Daten – nach dem ersten Cup geht's los.", W / 2, 520); x.textAlign = "left";
   }
   // Platz 1 – 10: alle Zeilen gleich, nichts Besonderes
-  const y0 = 250, rh = 80;
+  const y0 = extra ? 282 : 250, rh = 80;
+  if (extra && rows.length) { x.font = "700 15px Montserrat"; x.fillStyle = "rgba(255,255,255,.6)"; x.textAlign = "right"; x.fillText(extra.mainLabel, W - 96, 268); x.fillText(extra.label, W - 230, 268); x.textAlign = "left"; }
   for (let k = 0; k < Math.min(10, rows.length); k++) {
     const p = rows[k], Y = y0 + k * rh;
     x.fillStyle = k % 2 ? "rgba(20,14,10,.9)" : "rgba(34,20,10,.9)"; x.beginPath(); x.roundRect(70, Y, W - 140, rh - 12, 14); x.fill();
@@ -222,7 +223,9 @@ export async function leaderboardImage({ title, sub, rows, field, unit }) {
     let nm = p.name; while (x.measureText(nm).width > 420 && nm.length > 3) nm = nm.slice(0, -1);
     x.fillText(nm === p.name ? nm : nm + "…", 224, Y + 30);
     x.font = "600 15px Montserrat"; x.fillStyle = "rgba(255,255,255,.55)"; x.fillText(p.club, 224, Y + 52);
-    x.font = '44px "Bebas Neue"'; x.fillStyle = D.GOLD; x.textAlign = "right"; x.fillText(String(p[field]), W - 96, Y + 46); x.textAlign = "left";
+    x.font = '44px "Bebas Neue"'; x.fillStyle = D.GOLD; x.textAlign = "right"; x.fillText(String(p[field]), W - 96, Y + 46);
+    if (extra) { x.fillStyle = "#ffffff"; x.fillText(String(p[extra.field] || 0), W - 230, Y + 46); }
+    x.textAlign = "left";
   }
   x.font = '26px "Bebas Neue"'; x.fillStyle = "rgba(255,255,255,.45)"; x.textAlign = "center"; x.fillText(unit + "  ·  DATEN: EA SPORTS FC PRO CLUBS", W / 2, H - 44); x.textAlign = "left";
   D.hazard(x, W, H, 18);

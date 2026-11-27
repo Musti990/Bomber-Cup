@@ -21,11 +21,11 @@ export async function addCupPlayers(players, cupId) {
     if (cupId) S.cups.push(cupId);
     for (const p of list) {
       const k = key(p.name);
-      const x = S.players[k] ||= { name: p.name, club: p.club, goals: 0, assists: 0, cs: 0, games: 0, gkGames: 0, cups: 0 };
+      const x = S.players[k] ||= { name: p.name, club: p.club, goals: 0, assists: 0, cs: 0, saves: 0, games: 0, gkGames: 0, cups: 0 };
       const isGk = Object.entries(p.pos || {}).sort((a, b) => b[1] - a[1])[0]?.[0] === "goalkeeper";
       x.name = p.name; x.club = p.club;
       x.goals += p.goals || 0; x.assists += p.assists || 0; x.games += p.games || 0; x.cups += 1;
-      if (isGk) { x.cs += p.cs || 0; x.gkGames += p.games || 0; }
+      if (isGk) { x.cs += p.cs || 0; x.saves = (x.saves || 0) + (p.saves || 0); x.gkGames += p.games || 0; }
     }
     S.updated = Date.now();
     return list.length;
@@ -36,8 +36,9 @@ export async function addCupPlayers(players, cupId) {
 /** Bestenlisten: { scorers, assists, keepers } – je Top N */
 export async function boards(n = 10) {
   const all = Object.values(((await get("playerstats")) || {}).players || {});
-  const top = (field, filter = () => true) => all.filter((p) => p[field] > 0 && filter(p)).sort((a, b) => b[field] - a[field] || a.games - b.games || a.name.localeCompare(b.name)).slice(0, n);
-  return { scorers: top("goals"), assists: top("assists"), keepers: top("cs", (p) => p.gkGames > 0), total: all.length };
+  const top = (field, filter = () => true, tie = null) => all.filter((p) => (p[field] > 0 || (tie && p[tie] > 0)) && filter(p)).sort((a, b) => b[field] - a[field] || (tie ? (b[tie] || 0) - (a[tie] || 0) : 0) || a.games - b.games || a.name.localeCompare(b.name)).slice(0, n);
+  // Torhüter: zuerst Zu-null-Spiele, bei Gleichstand mehr Paraden
+  return { scorers: top("goals"), assists: top("assists"), keepers: top("cs", (p) => p.gkGames > 0, "saves"), total: all.length };
 }
 
 /** Bilder bauen und im Kanal „alltime“ die alte Bestenlisten-Nachricht ersetzen */
@@ -51,7 +52,7 @@ export async function refreshPlayerBoards() {
   const pages = [
     await leaderboardImage({ title: "TOP-TORSCHÜTZEN", sub: "All-Time · Tore", rows: b.scorers, field: "goals", unit: "TORE" }),
     await leaderboardImage({ title: "TOP-VORLAGEN", sub: "All-Time · Assists", rows: b.assists, field: "assists", unit: "ASSISTS" }),
-    await leaderboardImage({ title: "TOP-TORHÜTER", sub: "All-Time · Zu-null-Spiele", rows: b.keepers, field: "cs", unit: "CLEAN SHEETS" }),
+    await leaderboardImage({ title: "TOP-TORHÜTER", sub: "All-Time · Zu-null-Spiele & Paraden", rows: b.keepers, field: "cs", unit: "ZU NULL · PARADEN", extra: { field: "saves", label: "PARADEN", mainLabel: "ZU NULL" } }),
   ];
   const form = new FormData();
   form.append("payload_json", JSON.stringify({
