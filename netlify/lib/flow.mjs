@@ -608,6 +608,7 @@ async function finishCup(t, cfg) {
     const badgesBefore = await BD.snapshot().catch(() => ({}));
     await TR.recordCup(t);
     await BD.announceNew(badgesBefore).catch((e) => console.error("Abzeichen:", e));
+    try { const AT = await import("./alltime.mjs"); await AT.addWin(t.champion); await AT.refreshAllTime(); } catch (e) { console.error("All-Time:", e); }
     await refreshTeamStats().catch(() => {});
     await TR.refreshTrophyPanel();
     try { await (await import("./shop.mjs")).payoutCup(t); await mutate(tKey(t.channelId), (x) => { x.coinsPaid = true; }); } catch (e) { console.error("Vereinskasse:", e); }

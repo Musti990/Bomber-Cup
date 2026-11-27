@@ -44,6 +44,7 @@ const PLAN = [
   { key: "signup", name: "📝・" + fancy("Anmeldung"), cat: "cl", prof: "members" },
   { key: "live", name: "📺・" + fancy("Live-Spielplan"), cat: "cl", prof: "members" },
   { key: "hof", name: "🏆・" + fancy("Hall-of-Fame"), cat: "cl", prof: "members" },
+  { key: "alltime", name: "📊・" + fancy("All-Time"), cat: "cl", prof: "entry" },
   { key: "tott", name: "⭐・" + fancy("TOTT"), cat: "cl", prof: "members" },
   { key: "ban", name: "🚫・" + fancy("Sperrliste"), cat: "cl", prof: "members" },
   { key: "log", name: "📢・" + fancy("Turnierleitung"), cat: "cl", prof: "staff" },
@@ -79,7 +80,7 @@ export function detectKey(rawName) {
   if (n.includes("kophase")) return "ko";
   const day = DAYS.findIndex((d) => n === d.toLowerCase());
   if (day >= 0) return "day" + (day + 1);
-  const map = [["modlog", "modlog"], ["botlog", "botlog"], ["adminpanel", "adminpanel"], ["teamstatistiken", "teamstats"], ["eastatus", "eastatus"], ["eaabbrueche", "eaabort"], ["anmeldung", "signup"], ["staffbewerbung", "bewerbung"], ["bewerbung", "bewerbung"], ["support", "support"], ["teamofthetournament", "tott"], ["tott", "tott"], ["willkommen", "welcome"], ["tschuess", "goodbye"], ["abschied", "goodbye"], ["rollenauswahl", "roles"], ["benachrichtigung", "notify"], ["regelwerk", "rules"], ["registrieren", "reg"], ["meinemannschaft", "team"], ["mannschaftsuebersicht", "over"], ["livespielplan", "live"], ["halloffame", "hof"], ["sperrliste", "ban"], ["turnierleitung", "log"]];
+  const map = [["alltime", "alltime"], ["modlog", "modlog"], ["botlog", "botlog"], ["adminpanel", "adminpanel"], ["teamstatistiken", "teamstats"], ["eastatus", "eastatus"], ["eaabbrueche", "eaabort"], ["anmeldung", "signup"], ["staffbewerbung", "bewerbung"], ["bewerbung", "bewerbung"], ["support", "support"], ["teamofthetournament", "tott"], ["tott", "tott"], ["willkommen", "welcome"], ["tschuess", "goodbye"], ["abschied", "goodbye"], ["rollenauswahl", "roles"], ["benachrichtigung", "notify"], ["regelwerk", "rules"], ["registrieren", "reg"], ["meinemannschaft", "team"], ["mannschaftsuebersicht", "over"], ["livespielplan", "live"], ["halloffame", "hof"], ["sperrliste", "ban"], ["turnierleitung", "log"]];
   for (const [kw, key] of map) if (n.includes(kw)) return key;
   if (n === "regeln") return "rules";
   if (n === "admin") return "admin";
@@ -238,6 +239,7 @@ export async function processSetupJobs(budgetMs = 8000) {
       await refreshRulesPanel(); await refreshRolesPanel(); await refreshRegPanel(); await refreshTeamPanel(); await refreshOverview(); await refreshBanPanel();
       { const S = await import("./support.mjs"); await S.refreshTicketPanel(); await S.refreshApplyPanel(); }
       await (await import("./flow.mjs")).refreshAdminPanel();
+      await (await import("./alltime.mjs")).refreshAllTime().catch((e) => console.error("All-Time:", e));
     }
     await mutate("setupjobs", (x) => {
       const j = x.list[0];

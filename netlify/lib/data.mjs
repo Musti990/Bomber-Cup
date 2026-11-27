@@ -77,11 +77,13 @@ export const BASE_CHANNEL_TYPES = {
   admin: "Admin (Bewerbungen & Ticket-Log)",
   adminpanel: "Admin-Panel (Turnierleitung)",
   botlog: "Bot-Log (alles, was der Bot macht)",
+  alltime: "All-Time-Statistik (alle Cup-Sieger)",
   modlog: "Mod-Log (Verwarnungen, Timeouts, Beitritte)",
   eaabort: "EA-Abbrüche (nur Staff)",
   eastatus: "EA-Status: welche Spiele EA erfasst hat (nur Staff)",
   teamstats: "Team-Statistiken (All-Time)",
   modlog: "Mod-Log (Verwarnungen, Timeouts, Beitritte)",
+  alltime: "All-Time-Statistik (alle Cup-Sieger)",
 };
 export const CHANNEL_TYPES = {
   signup: "Anmeldung",

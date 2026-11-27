@@ -88,6 +88,9 @@ const COMMANDS = [
     ],
   },
   // ---------- Neu im Bomber Cup ----------
+  { name: "rangliste", description: "📊 All-Time-Statistik: Platz und Cup-Siege eines Teams", options: [
+    { type: 3, name: "team", description: "Teamname (leer = Top 10)", required: false, max_length: 60 },
+  ] },
   { name: "profil", description: "Abzeichen, Titel und Statistik eines Spielers", options: [
     { type: 6, name: "spieler", description: "Leer lassen = dein eigenes Profil", required: false },
   ] },
