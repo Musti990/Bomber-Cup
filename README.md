@@ -1,49 +1,55 @@
-# ⚡ Bomber Cup Bot – auf eigenem Server (Contabo, Docker)
+# 💥 Bomber Cup Bot
 
-Gleicher Bot wie auf Netlify – nur auf deinem Server. Vorteile: **keine Zeitlimits** (keine abgeschnittenen Posts),
-Daten liegen bei dir im Ordner `data/`.
+Turnier-Bot für **EA FC Pro Clubs**. Er kann:
+- Anmeldung, Check-in, Gruppen und Turnierbaum
+- Ergebnisse mit Bestätigung, Live-Spielplan, Hall of Fame, TOTT
+- Tickets, Shop
+- 🏅 Abzeichen, 💎 Premium, 🛡️ Moderation
+- 👋 Willkommens- und Tschüss-Karten
 
-## 1. Server vorbereiten (einmalig)
-Per SSH einloggen (Windows: PowerShell → `ssh root@DEINE-IP`, Passwort aus der Contabo-Mail), dann:
-```bash
-curl -fsSL https://get.docker.com | sh
-```
+Er läuft auf dem eigenen Server (Contabo + Coolify). Discord ruft den Bot über `https://bombercup.botifystore.eu/api/interactions` auf.
 
-## 2. Adresse für HTTPS
-Discord braucht **https://**. Zwei Möglichkeiten:
-- **Ohne Domain (einfach):** `DEINE-IP` mit Bindestrichen + `.sslip.io`, z. B. IP `85.215.10.20` → `85-215-10-20.sslip.io`
-- **Mit eigener Domain:** A-Eintrag `bot.deine-domain.de` → Server-IP
+## Sicher-Modus (Standard: AN)
+Der Bot fasst **nur seine eigenen Sachen** an. Alle seine Kanäle, Kategorien und Rollen beginnen mit **„1“**:
+- Kanäle: `1・📝・ANMELDUNG`
+- Kategorien: `1 ・ 🏟️ BOMBER CUP`
+- Rollen: `1 Spieler`, `1 💎 Premium`
 
-## 3. Bot hochladen & starten
-```bash
-mkdir -p /opt/apex && cd /opt/apex
-# ZIP hierher kopieren (z. B. mit WinSCP) und entpacken:
-apt-get install -y unzip && unzip Apex-Bot-Server.zip
-cp .env.example .env && nano .env     # Werte eintragen (Speichern: Strg+O, Enter, Strg+X)
-nano Caddyfile                        # DEINE-ADRESSE ersetzen
-docker compose up -d --build
-docker compose logs -f apex           # „Bomber Cup Bot läuft …“ → Strg+C zum Verlassen
-```
-Test im Browser: `https://DEINE-ADRESSE` zeigt das Logo und „Bomber Cup Bot läuft ✅“.
+Was der Bot im Sicher-Modus nicht macht:
+- fremde Kanäle verknüpfen, umbenennen, ihre Rechte ändern oder darin Nachrichten löschen
+- @everyone ändern
+- Spitznamen ändern
 
-## 4. Daten von Netlify übernehmen (Teams, Logos, Cups, Statistik, Kanäle)
-Vorher auf Netlify die **neueste Version** deployen (sie hat den Export). Dann auf dem Server:
-```bash
-cd /opt/apex
-docker compose run --rm bot node import-netlify.mjs https://statuesque-cupcake-4c791e.netlify.app DEIN_SETUP_KEY
-docker compose restart apex
-```
+Diese Einstellungen schalten das ab:
+- `SAFE_MODE=0`: ganzer Sicher-Modus aus (nur auf einem eigenen, leeren Server)
+- `NICKNAMES=1`: Spitznamen „Name VM | Verein“ erlauben
 
-## 5. Discord umstellen
-1. Developer Portal → **Interactions Endpoint URL:** `https://DEINE-ADRESSE/api/interactions` → Speichern
-2. Befehle registrieren: `https://DEINE-ADRESSE/api/setup?key=DEIN_SETUP_KEY`
-3. Fertig – Netlify-Seite danach löschen oder pausieren (sonst laufen die Timer doppelt!)
+## Coolify
+- **Build Pack:** Dockerfile
+- **Port:** 3000
+- **Domain:** `https://bombercup.botifystore.eu`
+- **Persistent Storage:** Volume → Destination `/data`
+- **Environment Variables:**
+  ```
+  DISCORD_TOKEN=…          (Bot → Reset Token)
+  DISCORD_PUBLIC_KEY=…     (General Information → Public Key)
+  DISCORD_APP_ID=…         (General Information → Application ID)
+  DISCORD_GUILD_ID=1069680093741461565
+  SETUP_KEY=…              (eigenes Passwort, nur Buchstaben/Zahlen)
+  PUBLIC_URL=https://bombercup.botifystore.eu
+  ```
 
-## Wartung
-```bash
-cd /opt/apex
-docker compose logs -f apex          # Protokoll
-docker compose restart apex          # Neustart
-docker compose up -d --build         # nach einem Update (neue Dateien hochgeladen)
-tar czf backup-$(date +%F).tgz data  # Sicherung aller Daten
-```
+## Discord verbinden
+1. Developer Portal → **Interactions Endpoint URL:** `https://bombercup.botifystore.eu/api/interactions`
+2. Befehle eintragen: `https://bombercup.botifystore.eu/api/setup?key=SETUP_KEY`
+3. Im Server: `/cup-einrichten alles` → legt die „1“-Kanäle und -Rollen an
+
+## Befehle (neu)
+- `/profil [spieler]`: Abzeichen, Titel, Statistik
+- `/premium geben|entfernen|liste` (nur Turnierleitung)
+- `/mod verwarnen|verwarnungen|verwarnungen-löschen|timeout|kick|bann|entbannen|automod`
+
+## Bilder neu bauen
+`node tools-bilder-erstellen.mjs "C:/Users/musti/Desktop/Bomber Cup"`
+
+Das Skript braucht `logo-discord.png` und `einladung-hintergrund.png` in diesem Ordner.
