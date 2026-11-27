@@ -40,7 +40,7 @@ export function regPanel(clubs) {
       gallery(`${site()}/banner-registrieren.jpg`),
       txt(`## Mannschaft registrieren\nGründe deine **eigene Mannschaft** – mit eigenem **Namen** und eigenem **Logo**.\nJeder Name gibt es nur einmal. Du wirst automatisch **Manager**.\n👕 **${taken}** ${taken === 1 ? "Mannschaft" : "Mannschaften"} registriert`),
       line(),
-      txt("### So geht's\n1️⃣ Auf **Mannschaft registrieren** klicken\n2️⃣ **Teamname**, **EA-Clubname** und **Logo** eintragen\n3️⃣ Der Bot sucht deinen Club direkt bei EA – gibt es mehrere, wählst du deinen aus\n-# Logo später ändern: `/cup-logo bild:` · Ergebnisse und TOTT kommen automatisch von EA."),
+      txt("### So geht's\n1️⃣ Auf **Mannschaft registrieren** klicken\n2️⃣ **Teamname**, **EA-Clubname** und **Logo** eintragen\n3️⃣ Der Bot sucht deinen Club direkt bei EA – gibt es mehrere, wählst du deinen aus"),
       line(),
       row(btn("Mannschaft registrieren", "reg_start", 1, { emoji: { name: "👕" } })),
       txt("-# Pro Manager eine Mannschaft"),
