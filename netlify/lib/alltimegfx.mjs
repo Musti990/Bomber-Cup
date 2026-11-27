@@ -181,3 +181,64 @@ export async function chronikPages(cups, { title = "CUP-CHRONIK", sub = "Jeder C
   }
   return out;
 }
+
+/**
+ * 👟 Bestenliste (Top 10) eines Wertes: Torschützen, Vorlagen oder Torhüter.
+ * rows: [{ name, club, [field] }] – Platz 1–3 groß mit Logo, 4–10 als Liste. Hochformat 1080 × 1350.
+ */
+export async function leaderboardImage({ title, sub, rows, field, unit }) {
+  fonts();
+  const { teamLogo, drawFit } = await import("./teamlogo.mjs");
+  const W = 1080, H = 1350;
+  const c = createCanvas(W, H), x = c.getContext("2d");
+  D.background(x, W, H, W / 2, 420, 820);
+  D.shockwaves(x, W / 2, 420, 170, 80, 8);
+  D.sparks(x, 180, W / 2, 420, 160, 560, D.rng(title.length * 7));
+  const lp = path.join(assetDir(), "logo.png");
+  const logo = fs.existsSync(lp) ? await loadImage(lp).catch(() => null) : null;
+  if (logo) D.medallion(x, logo, 110, 104, 56, D.OR);
+  D.header(x, 190, 86, 30, "·  " + sub.toUpperCase());
+  D.splitTitle(x, title, 190, 168, 84);
+  const ini = (s) => s.replace(/[^A-Za-z0-9ÄÖÜäöü ]/g, "").split(/\s+/).filter(Boolean).slice(0, 2).map((t) => t[0]).join("").toUpperCase() || "?";
+  const badge = async (club, cx, cy, r, ring) => {
+    x.save(); x.shadowColor = "rgba(255,120,30,.8)"; x.shadowBlur = 18; x.beginPath(); x.arc(cx, cy, r, 0, Math.PI * 2); x.fillStyle = "#0d0907"; x.fill(); x.restore();
+    const img = await teamLogo(club).catch(() => null);
+    if (img) { x.save(); x.beginPath(); x.arc(cx, cy, r - 4, 0, Math.PI * 2); x.clip(); drawFit(x, img, cx - (r - 7), cy - (r - 7), (r - 7) * 2); x.restore(); }
+    else { x.font = `${Math.round(r * 0.8)}px "Bebas Neue"`; x.fillStyle = "rgba(255,201,74,.85)"; x.textAlign = "center"; x.fillText(ini(club), cx, cy + r * 0.28); x.textAlign = "left"; }
+    x.lineWidth = Math.max(3, r * 0.07); x.strokeStyle = ring; x.beginPath(); x.arc(cx, cy, r, 0, Math.PI * 2); x.stroke();
+  };
+  if (!rows.length) {
+    x.font = "600 30px Montserrat"; x.fillStyle = "rgba(255,255,255,.75)"; x.textAlign = "center";
+    x.fillText("Noch keine Daten – nach dem ersten Cup geht's los.", W / 2, 520); x.textAlign = "left";
+  }
+  // Podest: 2 – 1 – 3
+  const pod = [{ i: 1, cx: 250, cy: 430, r: 82, col: "#dfe3ea" }, { i: 0, cx: 540, cy: 390, r: 104, col: "#ffcf4a" }, { i: 2, cx: 830, cy: 430, r: 82, col: "#e0894a" }];
+  for (const s of pod) {
+    const p = rows[s.i]; if (!p) continue;
+    await badge(p.club, s.cx, s.cy, s.r, s.col);
+    x.beginPath(); x.arc(s.cx, s.cy - s.r, 24, 0, Math.PI * 2); x.fillStyle = s.col; x.fill();
+    x.font = '30px "Bebas Neue"'; x.fillStyle = "#1a120a"; x.textAlign = "center"; x.fillText(String(s.i + 1), s.cx, s.cy - s.r + 11);
+    x.font = "700 24px Montserrat"; x.fillStyle = "#fff";
+    let nm = p.name; while (x.measureText(nm).width > 250 && nm.length > 3) nm = nm.slice(0, -1);
+    x.fillText(nm === p.name ? nm : nm + "…", s.cx, s.cy + s.r + 38);
+    x.font = "600 16px Montserrat"; x.fillStyle = "rgba(255,255,255,.6)"; x.fillText(p.club, s.cx, s.cy + s.r + 62);
+    x.font = `${s.i === 0 ? 64 : 52}px "Bebas Neue"`; x.fillStyle = s.col; x.fillText(String(p[field]), s.cx, s.cy + s.r + (s.i === 0 ? 124 : 112));
+    x.textAlign = "left";
+  }
+  // Platz 4 – 10
+  const y0 = 720, rh = 74;
+  for (let k = 0; k < Math.min(7, Math.max(0, rows.length - 3)); k++) {
+    const p = rows[k + 3], Y = y0 + k * rh;
+    x.fillStyle = k % 2 ? "rgba(20,14,10,.9)" : "rgba(34,20,10,.9)"; x.beginPath(); x.roundRect(70, Y, W - 140, rh - 12, 14); x.fill();
+    x.font = '40px "Bebas Neue"'; x.fillStyle = D.OR; x.fillText(String(k + 4), 96, Y + 44);
+    await badge(p.club, 180, Y + (rh - 12) / 2, 24, "rgba(255,138,31,.85)");
+    x.font = "700 24px Montserrat"; x.fillStyle = "#fff";
+    let nm = p.name; while (x.measureText(nm).width > 420 && nm.length > 3) nm = nm.slice(0, -1);
+    x.fillText(nm === p.name ? nm : nm + "…", 224, Y + 30);
+    x.font = "600 15px Montserrat"; x.fillStyle = "rgba(255,255,255,.55)"; x.fillText(p.club, 224, Y + 52);
+    x.font = '44px "Bebas Neue"'; x.fillStyle = D.GOLD; x.textAlign = "right"; x.fillText(String(p[field]), W - 96, Y + 46); x.textAlign = "left";
+  }
+  x.font = '26px "Bebas Neue"'; x.fillStyle = "rgba(255,255,255,.45)"; x.textAlign = "center"; x.fillText(unit + "  ·  DATEN: EA SPORTS FC PRO CLUBS", W / 2, H - 44); x.textAlign = "left";
+  D.hazard(x, W, H, 18);
+  return c.toBuffer("image/png");
+}

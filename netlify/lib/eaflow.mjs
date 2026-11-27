@@ -243,6 +243,8 @@ export async function postTott(t, { force = false } = {}) {
     if (cfg.channels.log) await sendMessage(cfg.channels.log, { content: `⭐ **TOTT · ${t.name}:** Keine EA-Spielerdaten gefunden – sind die EA-Clubs verknüpft? (\`/cup-admin ea-status\`)` });
     return { posted: false, reason: "keine EA-Daten" };
   }
+  // 👟 All-Time-Bestenlisten: Werte dieses Cups dazuzählen (nicht bei Test-Cups)
+  if (!t.test) { try { const PS = await import("./playerstats.mjs"); await PS.addCupPlayers(s.players, t.createdAt || t.channelId + ":" + t.times?.kickoff); await PS.refreshPlayerBoards(); } catch (e) { console.error("Bestenlisten:", e); } }
   const potT = team.pot;
   const text = { content: `⭐ **TOTT · ${t.name}**\n🏅 Spieler des Turniers: **${potT.name}** · ${flagOf(potT.club)} ${potT.club} · Ø ${potT.avg.toFixed(1)} · ${potT.goals} T · ${potT.assists} V\n-# Aus ${Object.keys(s.links).length} Spielen mit EA-Daten · 4-3-3` };
   try {
