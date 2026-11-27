@@ -1,6 +1,6 @@
 // Co-VMs eines Vereins. Neu: Liste `cos` = [{ id, base, orig }].
 // Alte Daten (Felder co / coBase / coOrigNick) werden automatisch mitgelesen und beim nächsten Speichern umgestellt.
-export const MAX_CO = 3;
+export const MAX_CO = 6; // bis zu 6 Co-VMs pro Mannschaft
 
 export function coList(c) {
   if (!c) return [];
