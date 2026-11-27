@@ -68,13 +68,16 @@ export function roundRobin(ids) {
 }
 
 /** Schließt die Anmeldung, wählt das Format und lost die Gruppen aus. */
-export function closeAndDraw(t) {
+export function closeAndDraw(t, prio = new Set()) {
   if (t.status !== "anmeldung") throw new Error("Die Anmeldung ist schon geschlossen.");
   const f = fmtOf(t.reg.length);
   if (!f) { t.status = "abgesagt"; return { cancelled: true }; }
   t.fmt = f;
   // Echte Mannschaften zuerst, Freilose füllen nur auf
-  const real = t.reg.filter((c) => !isFreilos(c)), free = t.reg.filter(isFreilos);
+  // 💎 Premium-Vereine haben Vorrang (kommen vor allen anderen ins Feld)
+  t.premium = t.reg.filter((c) => prio.has(c));
+  const real0 = t.reg.filter((c) => !isFreilos(c)), free = t.reg.filter(isFreilos);
+  const real = [...real0.filter((c) => prio.has(c)), ...real0.filter((c) => !prio.has(c))];
   const ordered = [...real.slice(0, f), ...free, ...real.slice(f)];
   t.playing = ordered.slice(0, f);
   t.wait = ordered.slice(f).filter((c) => !isFreilos(c));
@@ -134,7 +137,9 @@ function replaceTeam(t, oldC, newC) {
 export function finishCheckin(t) {
   if (t.status !== "checkin") throw new Error("Es läuft gerade kein Check-in.");
   const replaced = [], forfeited = [];
-  const queue = t.wait.filter((c) => t.waitChecked.includes(c));
+  const prem = new Set(t.premium || []);
+  const queue0 = t.wait.filter((c) => t.waitChecked.includes(c));
+  const queue = [...queue0.filter((c) => prem.has(c)), ...queue0.filter((c) => !prem.has(c))]; // 💎 rückt zuerst nach
   for (const c of t.playing.filter((c) => !t.checked.includes(c) && !isFreilos(c))) {
     const g = groupOf(t, c);
     const rep = queue.shift();

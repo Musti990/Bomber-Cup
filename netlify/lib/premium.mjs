@@ -78,3 +78,19 @@ export async function logPremium(text) {
   const ch = cfg.channels?.modlog || cfg.channels?.log;
   if (ch) await sendMessage(ch, { embeds: [{ color: 0x5ec8ff, description: text }] });
 }
+
+/** Vereine mit Vorrang: Manager oder ein Co-VM hat gerade Premium → Set der Vereinsnamen */
+export async function premiumClubNames(clubs) {
+  const all = (await get("premium")) || {};
+  const now = Date.now();
+  const active = new Set(Object.entries(all).filter(([, e]) => !e.until || e.until > now).map(([u]) => u));
+  const { coIds } = await import("./co.mjs");
+  const out = new Set();
+  for (const [name, c] of Object.entries(clubs || {})) {
+    if ([c.manager, ...coIds(c)].some((u) => u && active.has(u))) out.add(name);
+  }
+  return out;
+}
+
+/** Premium-Vereine nach vorne (Reihenfolge innerhalb der Gruppen bleibt wie angemeldet) */
+export const premiumFirst = (list, prio) => [...list.filter((c) => prio.has(c)), ...list.filter((c) => !prio.has(c))];

@@ -215,14 +215,14 @@ export async function launchTournament({ channelId, name, times, day, date }, { 
     if (!replace) throw new Error("In diesem Kanal läuft bereits ein Turnier.");
     if (T.ACTIVE.includes(old.status)) throw new Error("In diesem Kanal läuft gerade noch ein Cup.");
     old.status = "geloescht";
-    if (old.msgs.panel) await upsertMessage(channelId, old.msgs.panel, V.signupPanel(old, await getClubs()));
+    if (old.msgs.panel) await upsertMessage(channelId, old.msgs.panel, V.signupPanel(old, await getClubs(), await prioOf(await getClubs())));
   }
   // Sperre: zwei gleichzeitige Aufrufe für denselben Kanal posten nur einmal
   const lockKey = `launch:${channelId}:${times.kickoff}`;
   const { result: got } = await mutate("launchlocks", (l) => { const now = Date.now(); for (const [k, at] of Object.entries(l)) if (now - at > 10 * 60000) delete l[k]; if (l[lockKey]) return false; l[lockKey] = now; return true; }, { initial: {} });
   if (!got) { const cur = await get(tKey(channelId)); if (cur) return cur; throw new Error("Die Liste wird gerade schon gepostet."); }
   const t = T.createTournament({ channelId, name, times, day, date });
-  const msg = await sendMessage(channelId, V.signupPanel(t, await getClubs()));
+  const msg = await sendMessage(channelId, V.signupPanel(t, await getClubs(), await prioOf(await getClubs())));
   if (!msg) {
     await mutate("launchlocks", (l) => { delete l[lockKey]; }, { initial: {} });
     throw new Error(`Ich konnte in <#${channelId}> nichts posten – fehlen dem Bot dort Rechte?`);
@@ -233,9 +233,12 @@ export async function launchTournament({ channelId, name, times, day, date }, { 
   return t;
 }
 
+/** 💎 Vereine mit Premium-Vorrang */
+async function prioOf(clubs) { try { return await (await import("./premium.mjs")).premiumClubNames(clubs); } catch { return new Set(); } }
+
 export async function refreshSignup(t) {
   if (!t.msgs.panel) return;
-  const id = await upsertMessage(t.channelId, t.msgs.panel, V.signupPanel(t, await getClubs()));
+  const id = await upsertMessage(t.channelId, t.msgs.panel, V.signupPanel(t, await getClubs(), await prioOf(await getClubs())));
   if (id && id !== t.msgs.panel) await mutate(tKey(t.channelId), (x) => { x.msgs.panel = id; });
 }
 
@@ -263,10 +266,11 @@ export async function runSchedule(now = Date.now()) {
 export async function doDraw(channelId) {
   botLog(`🎲 **Anmeldeschluss** in <#${channelId}> – Auslosung & Check-in starten`);
   const cfg = await getConfig(), clubs = await getClubs();
+  const prio = await prioOf(clubs);
   const busy = await activeTournament();
   const { value: t, result } = await mutate(tKey(channelId), (t) => {
     if (busy && busy.channelId !== channelId && T.ACTIVE.includes(busy.status)) { t.status = "abgesagt"; return { cancelled: true, busy: true }; }
-    const r = T.closeAndDraw(t);
+    const r = T.closeAndDraw(t, prio);
     if (!r.cancelled) for (const c of t.playing.concat(t.wait)) t.members[c] = membersOf(clubs, c);
     return r;
   }, { missing: "Turnier nicht gefunden." });

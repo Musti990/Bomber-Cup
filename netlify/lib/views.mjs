@@ -193,10 +193,12 @@ const STATUS = {
   geloescht: "🗑️ **Turnier abgebrochen**",
 };
 
-export function signupPanel(t, clubs = {}) {
+export function signupPanel(t, clubs = {}, prio = new Set()) {
   const n = t.reg.length, f = fmtOf(n);
   const closed = t.status !== "anmeldung";
-  const real = t.reg.filter((c) => !isFreilos(c)), free = t.reg.filter(isFreilos);
+  if (closed && t.premium) prio = new Set(t.premium);
+  const real0 = t.reg.filter((c) => !isFreilos(c)), free = t.reg.filter(isFreilos);
+  const real = [...real0.filter((c) => prio.has(c)), ...real0.filter((c) => !prio.has(c))]; // 💎 Premium zuerst
   const ordered = [...real.slice(0, f || n), ...free, ...real.slice(f || n)];
   const playing = closed ? (t.playing.length ? t.playing : t.reg) : f ? ordered.slice(0, f) : ordered;
   const wait = closed ? t.wait : f ? ordered.slice(f).filter((c) => !isFreilos(c)) : [];
@@ -204,7 +206,7 @@ export function signupPanel(t, clubs = {}) {
   const who = (c) => (clubs[c]?.manager ? ` | <@${clubs[c].manager}>` : "");
   const tl = (c, k, waitList) => isFreilos(c)
     ? `${num(k)} 🎟️ **Freilos**`
-    : `${num(k)} ${flagOf(c)} **${esc(c)}**${who(c)}${t.status === "checkin" && waitList ? (t.waitChecked.includes(c) ? " ✅" : " ⏳") : ""}`;
+    : `${num(k)} ${flagOf(c)} **${esc(c)}**${prio.has(c) ? " 💎" : ""}${who(c)}${t.status === "checkin" && waitList ? (t.waitChecked.includes(c) ? " ✅" : " ⏳") : ""}`;
   const freeCount = playing.filter(isFreilos).length;
   const target = f || 8;
   const times = t.times;
@@ -217,7 +219,8 @@ export function signupPanel(t, clubs = {}) {
     `### 👥 Mannschaften (${playing.length}${f && !closed ? "/" + f : ""})${freeCount ? ` · davon ${freeCount} Freilos` : ""}\n` +
     (playing.length ? playing.map((c, k) => tl(c, k)).join("\n") : "_Noch keine Anmeldungen_") +
     (wait.length ? `\n\n**⏳ Warteliste**\n${wait.map((c, k) => tl(c, k, true)).join("\n")}\n-# Rückt nach, wenn eine Mannschaft nicht eincheckt.` : "") +
-    (freeCount ? "\n-# 🎟️ Wer gegen ein Freilos spielt, gewinnt automatisch 3:0. Freilose kommen nie weiter." : "");
+    (freeCount ? "\n-# 🎟️ Wer gegen ein Freilos spielt, gewinnt automatisch 3:0. Freilose kommen nie weiter." : "") +
+    (playing.concat(wait).some((c) => prio.has(c)) ? "\n-# 💎 Premium-Teams haben bei der Anmeldung Vorrang." : "");
   const buttons = [];
   if (t.status === "anmeldung") buttons.push(row(btn("Anmelden", "cup_join", 1, { emoji: { name: "⭐" } }), btn("Abmelden", "cup_leave")));
   if (t.status === "checkin" && t.wait.length) buttons.push(row(btn("Warteliste: Einchecken", "cup_waitci", 3, { emoji: { name: "✅" } })));
