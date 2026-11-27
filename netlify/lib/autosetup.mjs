@@ -1,0 +1,302 @@
+// /cup-einrichten alles: Rollen, Kanäle erkennen/anlegen, Rechte, Wochenplan, Panels – in einem Rutsch.
+import { coList } from "./co.mjs";
+import { get, set, del, keys, mutate, getConfig } from "./store.mjs";
+import { discord, getRoles, createRole, deleteMessage } from "./discord.mjs";
+import { GROUP_NAMES, ROUND_ROLES, DAYS, CHANNEL_TYPES } from "./data.mjs";
+import { parseTime, toMinutes } from "./time.mjs";
+import { SAFE, chan, cat as catName, role as roleName, isOwnName, stripPrefix, isOwnChannel } from "./safe.mjs";
+
+const G = () => process.env.DISCORD_GUILD_ID;
+const P = { VIEW: 1n << 10n, SEND: 1n << 11n, EMBED: 1n << 14n, FILES: 1n << 15n, HISTORY: 1n << 16n };
+const bits = (...xs) => xs.reduce((a, b) => a | b, 0n).toString();
+
+/**
+ * Text in die fette Server-Schrift umwandeln (𝐁𝐞𝐢𝐬𝐩𝐢𝐞𝐥). Funktioniert auch mit Namen, die schon in einer
+ * anderen Zier-Schrift stehen (z. B. 𝓢𝓬𝓱𝓻𝓮𝓲𝓫𝓼𝓬𝓱𝓻𝓲𝓯𝓽). Umlaute gibt es in dieser Schrift nicht → ae, oe, ue, ss.
+ */
+/** Kanalschrift: fette Großbuchstaben ohne Serifen (𝗜𝗡𝗙𝗢𝗥𝗠𝗔𝗧𝗜𝗢𝗡) – Umlaute werden zu AE/OE/UE */
+export function toBold(s) {
+  const UML = { "ä": "ae", "ö": "oe", "ü": "ue", "Ä": "Ae", "Ö": "Oe", "Ü": "Ue", "ß": "ss" };
+  return [...String(s)].map((ch) => {
+    const plain = UML[ch] ?? (ch.codePointAt(0) > 0x1d000 ? ch.normalize("NFKC") : ch);
+    return [...plain.toUpperCase()].map((x) => {
+      const c = x.charCodeAt(0);
+      if (c >= 65 && c <= 90) return String.fromCodePoint(0x1d5d4 + c - 65); // 𝗔–𝗭
+      if (c >= 48 && c <= 57) return String.fromCodePoint(0x1d7ec + c - 48); // 𝟬–𝟵
+      return x;
+    }).join("");
+  }).join("");
+}
+
+const fancy = toBold;
+
+/** Kanal-Plan: Schlüssel, Name beim Anlegen, Kategorie, Rechte-Profil */
+const PLAN = [
+  { key: "welcome", name: "👋・" + fancy("Willkommen"), cat: "info", prof: "entry" },
+  { key: "goodbye", name: "🚪・" + fancy("Tschuess"), cat: "info", prof: "entry" },
+  { key: "rules", name: "📜・" + fancy("Regelwerk"), cat: "info", prof: "entry" },
+  { key: "roles", name: "🎭・" + fancy("Rollenauswahl"), cat: "info", prof: "entry" },
+  { key: "notify", name: "🔔・" + fancy("Benachrichtigungen"), cat: "info", prof: "members" },
+  { key: "reg", name: "✍️・" + fancy("Team-registrieren"), cat: "teams", prof: "managers" },
+  { key: "team", name: "🛡️・" + fancy("Meine-Mannschaft"), cat: "teams", prof: "managers" },
+  { key: "over", name: "👥・" + fancy("Mannschaftsuebersicht"), cat: "teams", prof: "members" },
+  { key: "teamstats", name: "📊・" + fancy("Team-Statistiken"), cat: "teams", prof: "public" },
+  { key: "signup", name: "📝・" + fancy("Anmeldung"), cat: "cl", prof: "members" },
+  { key: "live", name: "📺・" + fancy("Live-Spielplan"), cat: "cl", prof: "members" },
+  { key: "hof", name: "🏆・" + fancy("Hall-of-Fame"), cat: "cl", prof: "members" },
+  { key: "tott", name: "⭐・" + fancy("TOTT"), cat: "cl", prof: "members" },
+  { key: "ban", name: "🚫・" + fancy("Sperrliste"), cat: "cl", prof: "members" },
+  { key: "log", name: "📢・" + fancy("Turnierleitung"), cat: "cl", prof: "staff" },
+  ...GROUP_NAMES.flatMap((g) => [
+    { key: "g" + g, name: "⚽・" + fancy("Gruppe-" + g), cat: "groups", prof: "group:" + g },
+    { key: "r" + g, name: "📥・" + fancy(g + "-Ergebnisse"), cat: "groups", prof: "groupres:" + g },
+  ]),
+  { key: "support", name: "🎫・" + fancy("Support"), cat: "support", prof: "members" },
+  { key: "bewerbung", name: "💼・" + fancy("Staff-Bewerbung"), cat: "support", prof: "members" },
+  { key: "adminpanel", name: "🛠️・" + fancy("Admin-Panel"), cat: "staff", prof: "admins" },
+  { key: "admin", name: "⚙️・" + fancy("Admin"), cat: "staff", prof: "admins" },
+  { key: "eaabort", name: "🚨・" + fancy("EA-Abbrueche"), cat: "staff", prof: "staff" },
+  { key: "eastatus", name: "📡・" + fancy("EA-Status"), cat: "staff", prof: "staff" },
+  { key: "botlog", name: "🧾・" + fancy("Bot-Log"), cat: "staff", prof: "admins" },
+  { key: "modlog", name: "🛡️・" + fancy("Mod-Log"), cat: "staff", prof: "staff" },
+  { key: "ko", name: "⚔️・" + fancy("KO-Phase"), cat: "ko", prof: "ko" },
+  { key: "kor", name: "🏁・" + fancy("KO-Ergebnisse"), cat: "ko", prof: "kores" },
+];
+const CATS0 = { info: "ℹ️ " + fancy("Information"), teams: "👕 " + fancy("Teams"), cl: "🏟️ " + fancy("Bomber Cup"), groups: "⚽ " + fancy("Gruppenphase"), ko: "⚔️ " + fancy("K.-O.-Phase"), support: "🛟 " + fancy("Support"), staff: "🛡️ " + fancy("Staff") };
+
+const CATS = Object.fromEntries(Object.entries(CATS0).map(([k, v]) => [k, catName(v)]));
+for (const p of PLAN) p.name = chan(p.name);
+
+/** Kanalname → Schlüssel (funktioniert auch mit Schreibschrift, Emojis und Trennzeichen) */
+export function detectKey(rawName) {
+  if (!isOwnName(rawName)) return null; // Sicher-Modus: nur Kanäle mit Vorsilbe „1“
+  rawName = stripPrefix(rawName);
+  const n = rawName.normalize("NFKC").toLowerCase().replace(/ä/g, "ae").replace(/ö/g, "oe").replace(/ü/g, "ue").replace(/ß/g, "ss").replace(/[^a-z0-9]/g, "");
+  let m;
+  if ((m = n.match(/^gruppe([a-h])ergebnisse$/)) || (m = n.match(/^([a-h])ergebnisse$/))) return "r" + m[1].toUpperCase();
+  if ((m = n.match(/^gruppe([a-h])$/))) return "g" + m[1].toUpperCase();
+  if (n.includes("koergebnisse")) return "kor";
+  if (n.includes("kophase")) return "ko";
+  const day = DAYS.findIndex((d) => n === d.toLowerCase());
+  if (day >= 0) return "day" + (day + 1);
+  const map = [["modlog", "modlog"], ["botlog", "botlog"], ["adminpanel", "adminpanel"], ["teamstatistiken", "teamstats"], ["eastatus", "eastatus"], ["eaabbrueche", "eaabort"], ["anmeldung", "signup"], ["staffbewerbung", "bewerbung"], ["bewerbung", "bewerbung"], ["support", "support"], ["teamofthetournament", "tott"], ["tott", "tott"], ["willkommen", "welcome"], ["tschuess", "goodbye"], ["abschied", "goodbye"], ["rollenauswahl", "roles"], ["benachrichtigung", "notify"], ["regelwerk", "rules"], ["registrieren", "reg"], ["meinemannschaft", "team"], ["mannschaftsuebersicht", "over"], ["livespielplan", "live"], ["halloffame", "hof"], ["sperrliste", "ban"], ["turnierleitung", "log"]];
+  for (const [kw, key] of map) if (n.includes(kw)) return key;
+  if (n === "regeln") return "rules";
+  if (n === "admin") return "admin";
+  return null;
+}
+
+/** Rechte je Profil (Bot ist Admin und sieht ohnehin alles) */
+function overwrites(prof, roles) {
+  const everyone = G();
+  const ro = { id: everyone, type: 0, allow: bits(P.VIEW, P.HISTORY), deny: bits(P.SEND) };
+  const hide = { id: everyone, type: 0, allow: "0", deny: bits(P.VIEW) };
+  const see = (id, ...extra) => (id ? { id, type: 0, allow: bits(P.VIEW, P.HISTORY, ...extra), deny: "0" } : null);
+  const seeRO = (id) => (id ? { id, type: 0, allow: bits(P.VIEW, P.HISTORY), deny: bits(P.SEND) } : null);
+  const lead = see(roles.turnierleitung, P.SEND, P.FILES);
+  // Eingang: Willkommen, Regelwerk, Rollenauswahl – sieht jeder, auch ohne Rolle
+  if (prof === "entry") return [ro];
+  if (prof === "public") prof = "members"; // Team-Statistiken usw. erst mit Rolle
+  // Alles andere: erst mit Rolle Spieler oder Manager (Staff sieht immer mit)
+  if (prof === "members") return [hide, seeRO(roles.spieler), seeRO(roles.manager), seeRO(roles.moderator), seeRO(roles.support), lead].filter(Boolean);
+  if (prof === "managers") return [hide, seeRO(roles.manager), lead].filter(Boolean);
+  if (prof === "staff") return [hide, lead, see(roles.moderator, P.SEND)].filter(Boolean);
+  if (prof === "admins") return [hide]; // nur Server-Admins (sehen ohnehin alles) und der Bot
+  if (prof.startsWith("group:")) return [hide, see(roles.groups?.[prof.slice(6)], P.SEND), lead].filter(Boolean);
+  if (prof.startsWith("groupres:")) return [hide, see(roles.groups?.[prof.slice(9)], P.SEND, P.FILES), lead].filter(Boolean);
+  if (prof === "ko") return [hide, see(roles.koPhase, P.SEND), ...ROUND_ROLES.map((r) => see(roles.rounds?.[r], P.SEND)), lead].filter(Boolean);
+  if (prof === "kores") return [hide, see(roles.koPhase, P.SEND, P.FILES), ...ROUND_ROLES.map((r) => see(roles.rounds?.[r], P.SEND, P.FILES)), lead].filter(Boolean);
+  return [];
+}
+
+/**
+ * Server abschließen: Ohne Rolle sieht man NUR Willkommen, Regelwerk und Rollenauswahl.
+ * @everyone verliert „Kanäle ansehen“ serverweit; Spieler, Manager und Staff bekommen es über ihre Rolle.
+ * So sind auch alle anderen Kanäle des Servers (nicht nur die vom Bot) erst mit Rolle sichtbar.
+ */
+export async function lockServer(roles) {
+  if (SAFE) return { everyone: false, roles: [], skipped: true }; // Sicher-Modus: Server-Rechte nie ändern
+  const all = (await discord(`/guilds/${G()}/roles`)) || [];
+  const byId = Object.fromEntries(all.map((r) => [r.id, r]));
+  const VIEW = 1n << 10n, HIST = 1n << 16n;
+  const res = { everyone: false, roles: [] };
+  const ev = byId[G()];
+  if (ev && (BigInt(ev.permissions) & VIEW)) { await discord(`/guilds/${G()}/roles/${G()}`, "PATCH", { permissions: String(BigInt(ev.permissions) & ~VIEW) }); res.everyone = true; }
+  for (const id of [roles.spieler, roles.manager, roles.turnierleitung, roles.moderator, roles.support].filter(Boolean)) {
+    const r = byId[id]; if (!r) continue;
+    const want = BigInt(r.permissions) | VIEW | HIST;
+    if (want !== BigInt(r.permissions)) { await discord(`/guilds/${G()}/roles/${id}`, "PATCH", { permissions: String(want) }); res.roles.push(r.name); }
+  }
+  return res;
+}
+
+/** Rollen verknüpfen bzw. anlegen */
+export async function setupRoles() {
+  const existing = (await getRoles()) || [];
+  const find = async (n0, color) => { const n = roleName(n0); const r = existing.find((x) => x.name.toLowerCase() === n.toLowerCase()); if (r) return r.id; const c = await createRole(n, color); return c?.id ?? null; };
+  const roles = { turnierleitung: await find("Turnierleitung", 0xc9a227), moderator: await find("Moderator", 0xe67e22), support: await find("Support", 0x1abc9c), manager: await find("Manager", 0x2f6fdc), spieler: await find("Spieler", 0x4a8a5c), groups: {}, rounds: {} };
+  for (const g of GROUP_NAMES) roles.groups[g] = await find(`Gruppe ${g}`, 0x3ba55c);
+  const rc = { Achtelfinale: 0x3c9ad6, Viertelfinale: 0x5865f2, Halbfinale: 0x9b59b6, Finale: 0xc9a227, "Spiel um Platz 3": 0xb5763a };
+  for (const r of ROUND_ROLES) roles.rounds[r] = await find(r, rc[r]);
+  // Gemeinsame Rolle für alle Teams in der K.-o.-Phase („KO Phase“, „KO-Phase“ … werden erkannt)
+  const norm = (n) => n.normalize("NFKC").toLowerCase().replace(/[^a-z0-9]/g, "");
+  roles.koPhase = existing.find((x) => isOwnName(x.name) && norm(stripPrefix(x.name)) === "kophase")?.id ?? (await createRole(roleName("KO Phase"), 0x3c9ad6))?.id ?? null;
+  await mutate("config", (c) => { c.roles = roles; }, { initial: { channels: {}, roles: {} } });
+  return roles;
+}
+
+/** Hauptfunktion: plant alles und stellt die Aufträge in die Warteschlange */
+export async function setupAll({ create = true, perms = true, kickoff = "20:00" } = {}) {
+  const roles = await setupRoles();
+  const all = (await discord(`/guilds/${G()}/channels`)) || [];
+  const text = all.filter((c) => c.type === 0 || c.type === 5);
+  const found = {};
+  for (const c of text) { const k = detectKey(c.name); if (k && !found[k]) found[k] = c.id; }
+
+  // Gefundene Kanäle sofort verknüpfen
+  await mutate("config", (cfg) => {
+    cfg.channels = cfg.channels || {};
+    for (const [k, id] of Object.entries(found)) if (!k.startsWith("day")) cfg.channels[k] = id;
+  }, { initial: { channels: {}, roles: {} } });
+
+  const jobs = [];
+  const missing = PLAN.filter((p) => !found[p.key]);
+  if (create && missing.length) {
+    const cats = all.filter((c) => c.type === 4);
+    for (const catKey of [...new Set(missing.map((m) => m.cat))]) {
+      const existing = cats.find((c) => c.name.normalize("NFKC").toLowerCase() === CATS[catKey].normalize("NFKC").toLowerCase());
+      jobs.push(existing ? { k: "catknown", cat: catKey, id: existing.id } : { k: "cat", cat: catKey, name: CATS[catKey] });
+    }
+    for (const m of missing) jobs.push({ k: "chan", key: m.key, name: m.name, cat: m.cat, prof: m.prof, day: m.day });
+  }
+  if (perms) for (const p of PLAN) if (found[p.key]) jobs.push({ k: "perm", ch: found[p.key], prof: p.prof });
+  // Wochenplan für gefundene Tageskanäle
+  const ko = parseTime(kickoff) || "20:00";
+  jobs.push({ k: "panels" });
+  await mutate("setupjobs", (q) => { q.list = jobs; q.kickoff = ko; q.cats = {}; q.done = 0; q.total = jobs.length; }, { initial: {} });
+  let lock = null;
+  if (perms) lock = await lockServer(roles).catch((e) => ({ err: e.message }));
+  return { roles, found, missing: create ? missing : [], perms, total: jobs.length, lock };
+}
+
+/** Alle Kanalnamen des Servers in die fette Schrift umstellen (Kategorien und Ticket-Kanäle bleiben) */
+export async function setupRename() {
+  const all = (await discord(`/guilds/${G()}/channels`)) || [];
+  const jobs = all
+    .filter((c) => [0, 2, 5, 13, 15].includes(c.type) && !/^ticket-/i.test(c.name) && isOwnName(c.name))
+    .map((c) => ({ k: "rename", ch: c.id, name: SAFE ? chan(toBold(stripPrefix(c.name).replace(/^・/, ""))) : toBold(c.name), old: c.name }))
+    .filter((j) => j.name !== j.old);
+  await mutate("setupjobs", (q) => { q.list = [...(q.list || []), ...jobs]; q.cats ||= {}; q.done = q.done || 0; q.total = (q.total || 0) + jobs.length; }, { initial: {} });
+  return jobs.length;
+}
+
+/** Nur die Rechte aller verknüpften Kanäle neu setzen (ohne Kanäle anzulegen oder den Wochenplan zu ändern) */
+export async function setupPerms() {
+  const cfg = await getConfig();
+  const plan = await get("zeitplan") || {};
+  const jobs = [];
+  for (const p of PLAN) {
+    const ch = p.day ? plan[p.day]?.channelId : cfg.channels?.[p.key];
+    if (ch) jobs.push({ k: "perm", ch, prof: p.prof });
+  }
+  await mutate("setupjobs", (q) => { q.list = [...(q.list || []), ...jobs]; q.cats ||= {}; q.done = q.done || 0; q.total = (q.total || 0) + jobs.length; }, { initial: {} });
+  return jobs.length;
+}
+
+/** Aufträge abarbeiten (vom Befehl und danach jede Minute vom Timer) */
+export async function processSetupJobs(budgetMs = 8000) {
+  const deadline = Date.now() + budgetMs;
+  const { refreshRulesPanel, refreshRolesPanel, refreshRegPanel, refreshTeamPanel, refreshOverview } = await import("./flow.mjs");
+  const { refreshBanPanel } = await import("./bans.mjs");
+  while (Date.now() < deadline - 1500) {
+    const q = await get("setupjobs");
+    const job = q?.list?.[0];
+    if (!job) return;
+    const cfg = await getConfig();
+    let ok = true;
+    if (job.k === "catknown") await mutate("setupjobs", (x) => { x.cats[job.cat] = job.id; });
+    if (job.k === "cat") {
+      const c = await discord(`/guilds/${G()}/channels`, "POST", { name: job.name, type: 4 });
+      ok = !!c; if (c) await mutate("setupjobs", (x) => { x.cats[job.cat] = c.id; });
+    }
+    if (job.k === "chan") {
+      const c = await discord(`/guilds/${G()}/channels`, "POST", { name: job.name, type: 0, parent_id: q.cats?.[job.cat] || undefined, permission_overwrites: overwrites(job.prof, cfg.roles || {}) });
+      ok = !!c;
+      if (c && !job.day) await mutate("config", (x) => { x.channels[job.key] = c.id; });
+      if (c && job.day) await setDay(job.day, c.id, q.kickoff || "20:00");
+    }
+    if ((job.k === "perm" || job.k === "rename") && !(await isOwnChannel(job.ch))) { await mutate("setupjobs", (x) => { x.list.shift(); x.done = (x.done || 0) + 1; }); continue; } // Sicher-Modus
+    if (job.k === "perm") {
+      for (const o of overwrites(job.prof, cfg.roles || {})) {
+        const r = await discord(`/channels/${job.ch}/permissions/${o.id}`, "PUT", { type: o.type, allow: o.allow, deny: o.deny });
+        if (!r) ok = false;
+      }
+    }
+    if (job.k === "zeit") await setDay(job.day, job.ch, job.kickoff);
+    if (job.k === "rename") ok = !!(await discord(`/channels/${job.ch}`, "PATCH", { name: job.name }, { reason: "Schrift vereinheitlicht" }));
+    if (job.k === "panels") {
+      await refreshRulesPanel(); await refreshRolesPanel(); await refreshRegPanel(); await refreshTeamPanel(); await refreshOverview(); await refreshBanPanel();
+      { const S = await import("./support.mjs"); await S.refreshTicketPanel(); await S.refreshApplyPanel(); }
+      await (await import("./flow.mjs")).refreshAdminPanel();
+    }
+    await mutate("setupjobs", (x) => {
+      const j = x.list[0];
+      if (!j) return;
+      j.tries = (j.tries || 0) + 1;
+      if (ok || j.tries >= 3) { x.list.shift(); x.done = (x.done || 0) + 1; }
+      else x.list.push(x.list.shift());
+    });
+  }
+}
+
+async function setDay(day, ch, kickoff) {
+  const k = parseTime(kickoff) || "20:00";
+  const post = toMinutes(k) - 60 > toMinutes("12:00") ? "12:00" : "08:00";
+  await mutate("zeitplan", (p) => { const old = p[day]; if (old?.channelId === ch) return; /* schon eingestellt → Anpfiff, Uhrzeit und Name bleiben */ p[day] = { channelId: ch, kickoff: k, post, name: "Bomber Cup", lastPosted: old?.channelId === ch ? old.lastPosted ?? null : null }; }, { initial: {} });
+}
+
+export async function setupProgress() {
+  const q = await get("setupjobs");
+  return q ? { done: q.done || 0, total: q.total || 0, left: q.list?.length || 0 } : null;
+}
+
+export { PLAN, CHANNEL_TYPES };
+
+/**
+ * Zurücksetzen.
+ * scope "setup": Kanal-Verknüpfungen, Rollen-Verknüpfungen, Wochenplan, Panels (Posts werden gelöscht)
+ * scope "all":   zusätzlich Vereine, Sperren, Regel-Bestätigungen, Turniere, Statistiken
+ * Discord-Kanäle und -Rollen selbst bleiben bestehen.
+ */
+export async function resetBot(scope = "setup") {
+  if (scope === "stats") {
+    await del("stats");
+    await mutate("clubs", (cl) => { for (const c of Object.values(cl)) { c.cups = 0; c.titles = 0; } }, { initial: {} });
+    const TR = await import("./trophies.mjs");
+    await TR.refreshTrophyPanel();
+    const F = await import("./flow.mjs");
+    await F.refreshOverview();
+    return { deleted: 0, scope, nicks: 0 };
+  }
+  const cfg = await getConfig();
+  const panels = (await get("panels")) || {};
+  const ch = cfg.channels || {};
+  const msgs = [[ch.reg, panels.reg], [ch.team, panels.team], [ch.rules, panels.rules], [ch.roles, panels.roles], [ch.ban, panels.ban], [ch.trophy, panels.trophy], [ch.support, panels.ticket], [ch.bewerbung, panels.apply], [ch.shop, panels.shop], ...(panels.over || []).map((id) => [ch.over, id])];
+  let deleted = 0;
+  for (const [c, id] of msgs) if (c && id && (await deleteMessage(c, id))) deleted++;
+  for (const k of ["config", "panels", "zeitplan", "setupjobs"]) await del(k);
+  const res = { deleted, scope, nicks: 0 };
+  if (scope === "all") {
+    const clubs = (await get("clubs")) || {};
+    const { setNick } = await import("./names.mjs");
+    const started = Date.now();
+    for (const c of Object.values(clubs)) {
+      if (Date.now() - started > 12000) break; // Zeitlimit – restliche Spitznamen bleiben
+      if (c.manager && (await setNick(c.manager, c.managerOrigNick ?? null))) res.nicks++;
+      for (const x of coList(c)) if (await setNick(x.id, x.orig ?? null)) res.nicks++;
+    }
+    for (const k of ["clubs", "stats", "bans", "rules", "mreq", "managers", "knownMembers", "rolequeue", "autodelete", "daily", "active"]) await del(k);
+    for (const k of await keys("t:")) await del(k);
+  }
+  return res;
+}

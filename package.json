@@ -1,0 +1,14 @@
+{
+  "name": "bomber-cup-bot",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@napi-rs/canvas": "^1.0.13",
+    "impit": "^0.14.5",
+    "tweetnacl": "^1.0.3"
+  },
+  "scripts": {
+    "start": "node server.mjs"
+  }
+}
