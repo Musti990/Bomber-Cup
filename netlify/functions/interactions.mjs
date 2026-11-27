@@ -853,6 +853,7 @@ async function component(i, context) {
     const detail = (c, note) => ({ ...V.teamDetail(c.club, c.data, c.role, daysBetween(SH.lastActiveKey(c.data, todayKey), todayKey())), content: note || "" });
     if (id === "team_open") return reply(i, detail(mine));
     if (id === "team_ea") return V.eaIdModal("team_ea_m", "EA-Club ändern", mine.data.eaName || mine.data.ea || "");
+    if (id === "team_stream") return V.streamModal(mine.data.stream || "");
     if (mine.role === "co") {
       if (id === "team_co_quit") {
         const orig = coList(mine.data).find((x) => x.id === uid)?.orig ?? null;
@@ -1089,6 +1090,16 @@ async function modal(i, context) {
     return eph(`✅ Größenvideo bei ${flagOf(result.v.to)} **${V.esc(result.v.to)}** angefordert (${min}. Spielminute).${usedExtra ? " 📏 Dafür wurde ein **Extra-Größenvideo** aus dem Shop verbraucht." : ""} Noch **${result.left}** Anforderungen übrig.`);
   }
 
+  if (id === "team_stream_m") {
+    const { parseStream } = await import("../lib/stream.mjs");
+    const r = parseStream(v.stream);
+    if (r.error) return eph(`❌ ${r.error}`);
+    const mine = F.clubOfUser(await getClubs(), uidOf(i));
+    if (!mine) return eph("Du bist keiner Mannschaft zugeordnet.");
+    await mutate("clubs", (cl) => { if (!cl[mine.club]) return; if (r.url) cl[mine.club].stream = r.url; else delete cl[mine.club].stream; }, { initial: {} });
+    later(context, async () => { await F.refreshOverview(); const t = await F.activeTournament().catch(() => null); if (t?.status === "anmeldung") await F.refreshSignup(t); for (const x of await F.allTournaments()) if (x.status === "anmeldung" && x !== t) await F.refreshSignup(x); });
+    return eph(r.url ? `📺 Stream-Link für **${V.esc(mine.club)}** gespeichert: ${r.url}` : `🗑️ Stream-Link von **${V.esc(mine.club)}** gelöscht.`);
+  }
   if (id === "team_ea_m") {
     const eaName = String(v.ea || "").trim();
     if (eaName.length < 2) return eph("Bitte den **EA-Clubnamen** eintragen.");

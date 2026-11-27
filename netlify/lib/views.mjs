@@ -92,6 +92,13 @@ export function freeAgainPost(c, reason) {
 }
 
 // ---------- Meine Mannschaft ----------
+import { streamTag, streamInfo } from "./stream.mjs";
+
+/** Eingabefenster für den Stream-Link */
+export function streamModal(value = "") {
+  return { type: 9, data: { custom_id: "team_stream_m", title: "Stream-Link", components: [row({ type: 4, custom_id: "stream", label: "Twitch, YouTube, Kick oder TikTok (leer = löschen)", style: 1, required: false, max_length: 200, value: value || undefined, placeholder: "z. B. twitch.tv/deinkanal" })] } };
+}
+
 export function teamPanel() {
   return {
     embeds: [{ color: COLOR, title: "🛡️ Meine Mannschaft", description: "Hier verwaltest du deine Mannschaft: Co-VM, EA-Club, verlassen oder löschen.\nDas Fenster kann nur der jeweilige Manager sehen.", footer: FOOTER }],
@@ -117,14 +124,15 @@ export function teamDetail(c, data, role, todayDaysRaw) {
         { name: "EA-Club", value: data.eaId ? `${esc(data.eaName || data.ea || "–")}\n-# ID ${data.eaId}${data.eaVerified === false ? " · ⚠️ von EA nicht bestätigt" : " · ✅ verknüpft"}` : "–\n-# ⚠️ kein EA-Club verknüpft", inline: true },
         { name: "Cups", value: String(data.cups ?? 0), inline: true },
         { name: "Titel", value: String(data.titles ?? 0), inline: true },
+        { name: "📺 Stream", value: streamInfo(data.stream) ? `[${streamInfo(data.stream).name}](${data.stream})` : "–\n-# Noch kein Stream-Link", inline: true },
       ],
     }],
     components: role === "manager"
       ? [
-          row(btn("Co-VM hinzufügen", "team_co_add", 1, { disabled: coIds(data).length >= MAX_CO }), btn("EA-Club ändern", "team_ea", 1)),
+          row(btn("Co-VM hinzufügen", "team_co_add", 1, { disabled: coIds(data).length >= MAX_CO }), btn("EA-Club ändern", "team_ea", 1), btn("Stream-Link", "team_stream", 1, { emoji: { name: "📺" } })),
           row(btn("Co-VM entfernen", "team_co_rem", 2, { disabled: !coIds(data).length }), btn("Mannschaft verlassen", "team_leave", 4), btn("Mannschaft löschen", "team_del", 4)),
         ]
-      : [row(btn("EA-Club ändern", "team_ea", 1), btn("Als Co-VM austreten", "team_co_quit", 4))],
+      : [row(btn("EA-Club ändern", "team_ea", 1), btn("Stream-Link", "team_stream", 1, { emoji: { name: "📺" } }), btn("Als Co-VM austreten", "team_co_quit", 4))],
   };
 }
 
@@ -155,7 +163,7 @@ export function confirmView(text, okId, okLabel) {
 export function overviewMessages(clubs) {
   const names = Object.keys(clubs).sort((x, y) => x.localeCompare(y, "de"));
   const head = { color: COLOR, title: "⭐ MANNSCHAFTSÜBERSICHT", description: `**${names.length}** ${names.length === 1 ? "Mannschaft" : "Mannschaften"} registriert`, footer: { text: "Aktualisiert sich automatisch" } };
-  const lines = names.map((c) => `🛡️ **${esc(c)}** · <@${clubs[c].manager}>${coIds(clubs[c]).map((u) => ` + <@${u}>`).join("")}`);
+  const lines = names.map((c) => `🛡️ **${esc(c)}** · <@${clubs[c].manager}>${coIds(clubs[c]).map((u) => ` + <@${u}>`).join("")}${streamTag(clubs[c])}`);
   const chunks = [];
   for (let k = 0; k < lines.length; k += 25) chunks.push(lines.slice(k, k + 25));
   const embeds = chunks.map((c, k) => ({ color: COLOR, title: chunks.length > 1 ? `Teil ${k + 1}` : undefined, description: c.join("\n") }));
@@ -206,7 +214,7 @@ export function signupPanel(t, clubs = {}, prio = new Set()) {
   const who = (c) => (clubs[c]?.manager ? ` | <@${clubs[c].manager}>` : "");
   const tl = (c, k, waitList) => isFreilos(c)
     ? `${num(k)} 🎟️ **Freilos**`
-    : `${num(k)} ${flagOf(c)} **${esc(c)}**${prio.has(c) ? " 💎" : ""}${who(c)}${t.status === "checkin" && waitList ? (t.waitChecked.includes(c) ? " ✅" : " ⏳") : ""}`;
+    : `${num(k)} ${flagOf(c)} **${esc(c)}**${prio.has(c) ? " 💎" : ""}${who(c)}${streamTag(clubs[c])}${t.status === "checkin" && waitList ? (t.waitChecked.includes(c) ? " ✅" : " ⏳") : ""}`;
   const freeCount = playing.filter(isFreilos).length;
   const target = f || 8;
   const times = t.times;
