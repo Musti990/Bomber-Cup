@@ -544,7 +544,7 @@ export function rulesPanel(count, R = RULES) {
       title: R.title,
       thumbnail: { url: `${site()}/logo.jpg` },
       fields: R.sections.slice(0, 25).map(([name, value]) => ({ name: String(name).slice(0, 256), value: String(value).slice(0, 1024) })),
-    }, ...(R.highlight?.text ? [{
+    }, { color: COLOR, image: { url: `${site()}/regeln-de.jpg` } }, ...(R.highlight?.text ? [{
       color: 0xe02424, // rot, damit die Regel sofort auffällt
       title: R.highlight.title,
       description: R.highlight.text,
@@ -569,7 +569,7 @@ export function rulesTranslated(R, lang) {
       title: R.title,
       thumbnail: { url: `${site()}/logo.jpg` },
       fields: R.sections.slice(0, 25).map(([name, value]) => ({ name: String(name).slice(0, 256), value: String(value).slice(0, 1024) })),
-    }, ...(R.highlight?.text ? [{ color: 0xe02424, title: R.highlight.title, description: R.highlight.text }] : []), { color: COLOR, description: `-# ${note}` }],
+    }, ...(lang === "en" ? [{ color: COLOR, image: { url: `${site()}/regeln-en.jpg` } }] : []), ...(R.highlight?.text ? [{ color: 0xe02424, title: R.highlight.title, description: R.highlight.text }] : []), { color: COLOR, description: `-# ${note}` }],
   };
 }
 
